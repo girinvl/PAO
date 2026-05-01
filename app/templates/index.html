@@ -306,7 +306,7 @@
 
 {% for fridge in fridge_map %}
 <div class="fridge">
-<div class="fridge-title">Холодильник {{ fridge.fridge }}</div>
+<div class="fridge-title">Холодильник {{ fridge.fridge }} ({{ fridge.shelves|map(attribute='bodies')|map('length')|sum }})</div>
 
 <div class="shelves">
 {% for shelf in fridge.shelves|reverse %}
@@ -318,10 +318,10 @@ data-shelf="{{ shelf.shelf }}"
 onclick="Anubis.openShelfModal({{ fridge.fridge }},{{ shelf.shelf }})"
 >
 
-<div class="shelf-header">Полка {{ shelf.shelf }}</div>
+<div class="shelf-header">Полка {{ shelf.shelf }} ({{ shelf.bodies|length }})</div>
 
 {% if shelf.bodies %}
-<div class="bodies">
+<div class="bodies shelf-bodies-scroll">
 {% for b in shelf.bodies %}
 <div
 class="body-chip status-{{ b.autopsy }}{% if b.issue_planned_at and b.issue_planned_at.strftime('%Y-%m-%d') == today_str %} issue-today{% endif %}{% if b.issue_reject %} issue-reject{% endif %}"
@@ -368,6 +368,8 @@ onclick="event.stopPropagation(); Anubis.openEditModal({{ b.id }})"
 </div>
 {% endfor %}
 </div>
+<div class="shelf-scroll-edge shelf-scroll-left" data-dir="-1"></div>
+<div class="shelf-scroll-edge shelf-scroll-right" data-dir="1"></div>
 {% else %}
 <div class="empty-text">Пусто</div>
 {% endif %}
@@ -388,7 +390,7 @@ data-shelf="0"
 onclick="Anubis.openUnknownModal()"
 >
 
-<div class="unknown-title">Без места / на полу</div>
+<div class="unknown-title">Без места / на полу ({{ unknown_bodies|length }})</div>
 
 <div class="unknown-bodies">
 {% if unknown_bodies %}

@@ -475,3 +475,44 @@ document.addEventListener("pointermove", function(e){
 document.addEventListener("pointerleave", function(){
     Anubis.clearDuplicateSurnameHighlight();
 }, {passive:true});
+
+
+// Горизонтальная прокрутка тел внутри полки при наведении на край.
+Anubis.shelfEdgeScrollTimers = Anubis.shelfEdgeScrollTimers || new WeakMap();
+
+Anubis.startShelfEdgeScroll = function(edge){
+    const shelf = edge && edge.closest(".shelf");
+    if (!shelf) return;
+
+    const scroller = shelf.querySelector(".shelf-bodies-scroll");
+    if (!scroller) return;
+
+    const dir = Number(edge.dataset.dir || 0);
+    if (!dir) return;
+
+    Anubis.stopShelfEdgeScroll(edge);
+
+    const timer = setInterval(() => {
+        scroller.scrollLeft += dir * 18;
+    }, 24);
+
+    Anubis.shelfEdgeScrollTimers.set(edge, timer);
+};
+
+Anubis.stopShelfEdgeScroll = function(edge){
+    const timer = Anubis.shelfEdgeScrollTimers.get(edge);
+    if (timer) {
+        clearInterval(timer);
+        Anubis.shelfEdgeScrollTimers.delete(edge);
+    }
+};
+
+document.addEventListener("mouseenter", function(e){
+    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge");
+    if (edge) Anubis.startShelfEdgeScroll(edge);
+}, true);
+
+document.addEventListener("mouseleave", function(e){
+    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge");
+    if (edge) Anubis.stopShelfEdgeScroll(edge);
+}, true);
