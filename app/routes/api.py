@@ -451,7 +451,7 @@ def _issue_body_payload(body):
         "issue_beautify": getattr(body, "issue_beautify", 0) or getattr(body, "issue_beard", 0) or 0,
         "issue_mustache": getattr(body, "issue_mustache", 0) or 0,
         "issue_funeral": getattr(body, "issue_funeral", 0) or 0,
-        "issue_note": getattr(body, "issue_note", "") or "",
+        "issue_note": body.comment or "", "has_comment": bool((body.comment or "").strip()),
         "issue_reject": getattr(body, "issue_reject", 0) or 0,
         "flag_marshmallow": getattr(body, "flag_marshmallow", 0) or 0,
         "flag_blue_face": getattr(body, "flag_blue_face", 0) or 0,
