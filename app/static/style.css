@@ -1,0 +1,87 @@
+@import url("/static/css/base.css");
+@import url("/static/css/layout.css");
+@import url("/static/css/modal.css");
+@import url("/static/css/table.css");
+@import url("/static/css/indicators.css");
+@import url("/static/css/drag.css");
+@import url("/static/css/mobile.css");
+
+@import url("/static/css/issue.css");
+@import url("/static/css/issue_v4_fix.css");
+
+
+
+
+/* Duplicate surname hover highlight */
+.body-chip.duplicate-surname-highlight,
+.issue-body-card.duplicate-surname-highlight{
+    border-color:#ffea00 !important;
+    box-shadow:
+        0 0 0 3px rgba(255, 234, 0, .98),
+        0 0 34px rgba(255, 234, 0, .88),
+        inset 0 0 0 1px rgba(255, 255, 190, .75) !important;
+    position:relative;
+    z-index:20;
+}
+
+.duplicate-warn{
+    cursor:help;
+    display:inline-block;
+    filter:drop-shadow(0 0 6px rgba(255, 234, 0, .95));
+}
+
+.duplicate-warn:hover{
+    transform:scale(1.22);
+}
+
+
+
+/* Cross-window body lock UI */
+.anubis-toast-box{
+    position:fixed;
+    right:18px;
+    top:18px;
+    z-index:20000;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    pointer-events:none;
+}
+.anubis-toast{
+    max-width:min(360px, calc(100vw - 36px));
+    padding:12px 14px;
+    border:1px solid rgba(255,212,90,.65);
+    border-radius:14px;
+    background:rgba(18,22,23,.96);
+    color:#ffe28a;
+    box-shadow:0 14px 38px rgba(0,0,0,.42);
+    opacity:0;
+    transform:translateY(-8px);
+    transition:opacity .18s ease, transform .18s ease;
+    font-weight:900;
+}
+.anubis-toast.error{
+    border-color:rgba(255,90,90,.75);
+    color:#ffd1d1;
+}
+.anubis-toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+.body-chip.body-locked,
+.issue-body-card.body-locked,
+.issue-slot-body.body-locked{
+    opacity:.55;
+    filter:grayscale(.35);
+    box-shadow:0 0 0 2px rgba(255,90,90,.55), 0 0 18px rgba(255,90,90,.28) !important;
+}
+.body-chip.body-locked::after,
+.issue-body-card.body-locked::after,
+.issue-slot-body.body-locked::after{
+    content:"🔒";
+    position:absolute;
+    right:6px;
+    top:5px;
+    font-size:14px;
+    filter:drop-shadow(0 0 4px rgba(0,0,0,.8));
+}

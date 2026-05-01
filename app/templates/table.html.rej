@@ -1,0 +1,87 @@
+--- app/templates/table.html	2026-04-25 10:37:00.000000000 +0000
++++ app/templates/table.html	1970-01-01 00:00:00.000000000 +0000
+@@ -1,84 +0,0 @@
+-<!DOCTYPE html>
+-<html lang="ru">
+-<head>
+-<meta charset="UTF-8">
+-<meta name="viewport" content="width=device-width,initial-scale=1">
+-<title>Анубис — таблица</title>
+-<link rel="stylesheet" href="/static/style.css">
+-</head>
+-<body class="table-page">
+-
+-<header class="table-header">
+-    <h1>Анубис</h1>
+-    <a href="/" class="table-link">← Главная</a>
+-    <a href="/faq" class="table-link">FAQ</a>
+-</header>
+-
+-<section class="table-panel">
+-
+-<form method="get" action="/table" class="filters">
+-    <input name="q" value="{{ q }}" placeholder="Поиск по фамилии">
+-
+-    <select name="status">
+-        <option value="active" {% if status=="active" %}selected{% endif %}>Не выданные</option>
+-        <option value="issued" {% if status=="issued" %}selected{% endif %}>Выданные</option>
+-        <option value="all" {% if status=="all" %}selected{% endif %}>Все</option>
+-    </select>
+-
+-    <select name="sort">
+-        <option value="surname" {% if sort=="surname" %}selected{% endif %}>По фамилии</option>
+-        <option value="arrived" {% if sort=="arrived" %}selected{% endif %}>По поступлению</option>
+-        <option value="issued" {% if sort=="issued" %}selected{% endif %}>По выдаче</option>
+-        <option value="place" {% if sort=="place" %}selected{% endif %}>По месту</option>
+-    </select>
+-
+-    <button type="submit">Фильтр</button>
+-</form>
+-
+-<table class="bodies-table">
+-<thead>
+-<tr>
+-    <th>Фамилия</th>
+-    <th>Инициалы</th>
+-    <th>Рост</th>
+-    <th>Место</th>
+-    <th>Статус</th>
+-    <th>Поступил</th>
+-    <th>Выдан</th>
+-    <th>Пометки</th>
+-</tr>
+-</thead>
+-
+-<tbody>
+-{% for b in bodies %}
+-<tr>
+-    <td>
+-        {{ b.surname }}
+-        {% if b.has_comment %}🔔{% endif %}
+-        {% if b.is_duplicate_surname %}❗{% endif %}
+-        {% if b.is_old %}💩{% endif %}
+-    </td>
+-    <td>{{ b.initials }}</td>
+-    <td>{% if b.height %}{{ b.height }}{% endif %}</td>
+-    <td>
+-        {% if b.issued_at %}
+-            выдан
+-        {% elif b.fridge == 0 or b.shelf == 0 %}
+-            без места
+-        {% else %}
+-            {{ b.fridge }}{{ b.shelf }}{{ b.autopsy }}
+-        {% endif %}
+-    </td>
+-    <td>{% if b.autopsy == 2 %}вскрыт{% else %}не вскрыт{% endif %}</td>
+-    <td>{{ b.arrived_at|dt }}</td>
+-    <td>{{ b.issued_at|dt }}</td>
+-    <td>{{ b.comment }}</td>
+-</tr>
+-{% endfor %}
+-</tbody>
+-</table>
+-
+-</section>
+-
+-</body>
+-</html>

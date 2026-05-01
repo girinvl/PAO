@@ -1,0 +1,23 @@
+/* app/static/css/modal.css (FULL FILE ADDITION) */
+
+.issue-flags-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 12px;
+    margin-top:6px;
+}
+
+.issue-flags-grid label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    padding:6px 8px;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;
+    background: rgba(255,255,255,0.02);
+}
+
+.issue-flags-grid input{
+    transform:scale(0.9);
+}

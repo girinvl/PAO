@@ -1,0 +1,141 @@
+.issue-body{min-height:100vh;background:#05080a;color:#efd98c;overflow:auto}.issue-page{padding:18px}.issue-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border:1px solid #7f5a18;border-radius:22px;background:linear-gradient(135deg,rgba(12,18,20,.96),rgba(5,8,10,.98));padding:18px 20px;box-shadow:0 12px 38px rgba(0,0,0,.38);margin-bottom:16px}.issue-header h1{margin:6px 0;color:#ffd45a;font-size:38px}.issue-header p{margin:0;color:#cdb36e}.issue-back,.issue-table-link{display:inline-block;color:#ffd45a;text-decoration:none;border:1px solid #8b6a25;border-radius:13px;padding:10px 14px;background:#111719;font-weight:900}.issue-layout{display:grid;grid-template-columns:420px minmax(0,1fr);gap:16px;align-items:start}.issue-left-panel,.issue-right-panel{border:1px solid #33485c;border-radius:22px;background:rgba(8,13,16,.94);box-shadow:0 10px 32px rgba(0,0,0,.34);padding:14px}.issue-left-panel{position:sticky;top:12px;max-height:calc(100vh - 150px);display:flex;flex-direction:column}.issue-panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.issue-panel-title h2{margin:0;color:#ffd45a}.issue-panel-title span{background:#2a210d;border:1px solid #8b6a25;border-radius:999px;padding:6px 12px;font-weight:900;color:#fff0bd}.issue-search{width:100%;box-sizing:border-box;margin-bottom:10px;padding:12px;border-radius:14px;border:1px solid #76551d;background:#050708;color:#ffe9a7;font-size:16px}.issue-body-list{overflow:auto;display:grid;gap:9px;padding-right:4px}.issue-body-card{border:1px solid #40576c;border-left:6px solid #7f5a18;border-radius:16px;padding:10px 11px;background:#101719;cursor:grab;user-select:none}.issue-body-card:active{cursor:grabbing}.issue-body-card.status-1{border-left-color:#d8a638}.issue-body-card.status-2{border-left-color:#4aa3ff}.issue-body-card.dragging{opacity:.45;transform:scale(.98)}.issue-card-main{display:flex;justify-content:space-between;gap:10px;align-items:center}.issue-card-main strong{font-size:17px;color:#fff1ba}.issue-card-main span{font-weight:900;color:#ffd45a}.issue-card-meta{font-size:13px;color:#cdb36e;margin-top:4px}.issue-card-icons{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;font-size:18px}.issue-calendar-head,.issue-day-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.issue-calendar-head h2,.issue-day-head h2{margin:0;color:#ffd45a;font-size:30px}.issue-calendar-head button,.issue-day-head button{border:1px solid #8b6a25;background:#111719;color:#ffd45a;border-radius:13px;padding:10px 14px;font-weight:900;cursor:pointer}.issue-weekdays,.issue-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.issue-weekdays span{text-align:center;color:#cdb36e;font-weight:900;padding:6px}.issue-day-cell{min-height:104px;border:1px solid #33485c;border-radius:16px;background:#0d1316;padding:9px;cursor:pointer;display:flex;flex-direction:column;gap:6px;text-align:left;color:#efd98c}.issue-day-cell:hover{border-color:#ffd45a;box-shadow:0 0 0 2px rgba(255,212,90,.16) inset}.issue-day-cell.other{opacity:.35}.issue-day-number{font-size:20px;font-weight:950;color:#fff0bd}.issue-day-count{margin-top:auto;align-self:flex-start;background:#2a210d;border:1px solid #8b6a25;border-radius:999px;padding:4px 8px;color:#ffd45a;font-weight:900;font-size:13px}.issue-day-list{font-size:12px;color:#d8c389;line-height:1.25;max-height:38px;overflow:hidden}.issue-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.issue-slot{min-height:102px;border:1px dashed #53697b;border-radius:16px;background:#0d1316;padding:10px}.issue-slot.full{border-style:solid;border-color:#b35d52;background:#1a1110}.issue-slot.over{border-color:#ffd45a;box-shadow:0 0 0 3px rgba(255,212,90,.18) inset}.issue-slot-time{font-size:20px;font-weight:950;color:#ffd45a;margin-bottom:8px}.issue-slot-items{display:grid;gap:6px}.issue-slot-body{border:1px solid #40576c;border-radius:12px;padding:7px 8px;background:#111719;color:#fff0bd;font-weight:900;cursor:pointer}.issue-empty-slot{color:#806d3f;font-size:13px}.hidden{display:none!important}.issue-modal{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px}.issue-modal-card{width:min(520px,100%);border:1px solid #8b6a25;border-radius:22px;background:#080c0e;padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.58)}.issue-modal-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.issue-modal-header h2{margin:0;color:#ffd45a;font-size:28px}.issue-modal-header button{border:1px solid #8b6a25;background:#111719;color:#ffd45a;border-radius:12px;font-size:28px;line-height:1;min-width:44px;height:42px}#issueForm{display:grid;gap:10px}#issueForm label{font-weight:900;color:#ffd45a}#issueForm input,#issueForm select{padding:12px;border:1px solid #76551d;border-radius:13px;background:#050708;color:#ffe9a7;font-size:16px}.issue-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:6px 0}.issue-checks label{display:flex;align-items:center;gap:8px;border:1px solid #40576c;border-radius:14px;background:#111719;padding:12px;color:#fff0bd}.issue-checks input{width:20px;height:20px}.issue-modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.issue-modal-actions button{border:1px solid #8b6a25;background:#111719;color:#ffd45a;border-radius:13px;padding:12px 14px;font-weight:900;cursor:pointer}.issue-modal-actions .issue-save{background:#2a210d;color:#fff0bd}#issueMessage{margin-top:10px;color:#ffcf70;font-weight:900}@media(max-width:1100px){.issue-layout{grid-template-columns:1fr}.issue-left-panel{position:static;max-height:none}.issue-slots{grid-template-columns:1fr}.issue-day-cell{min-height:82px}.issue-header{display:block}.issue-table-link{margin-top:10px}.issue-checks{grid-template-columns:1fr}}
+
+
+/* Issue v3: readability, reject and today colors */
+.issue-slots{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+}
+
+.issue-slot{
+    min-height:82px;
+    display:grid;
+    grid-template-columns:96px minmax(0,1fr);
+    gap:12px;
+    align-items:start;
+}
+
+.issue-slot-time{
+    font-size:26px!important;
+    line-height:1;
+    position:sticky;
+    top:0;
+}
+
+.issue-slot-items{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+}
+
+.issue-slot-body{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    align-items:center;
+}
+
+.issue-slot-icons,
+.issue-card-icons{
+    min-height:22px;
+}
+
+.issue-body-card.issue-today,
+.body-chip.issue-today,
+.issue-slot-body.issue-today{
+    border-color:#a855f7!important;
+    border-left-color:#a855f7!important;
+    background:linear-gradient(135deg,rgba(88,28,135,.9),rgba(28,12,43,.92))!important;
+    box-shadow:0 0 0 2px rgba(168,85,247,.2) inset,0 0 18px rgba(168,85,247,.18)!important;
+}
+
+.issue-body-card.issue-reject,
+.body-chip.issue-reject,
+.issue-slot-body.issue-reject{
+    border-color:rgba(239,68,68,.22)!important;
+    border-left-color:rgba(239,68,68,.32)!important;
+    background:
+        repeating-linear-gradient(135deg, rgba(239,68,68,.16) 0 8px, rgba(239,68,68,.04) 8px 16px),
+        rgba(17,23,25,.76)!important;
+    box-shadow:none!important;
+}
+
+.flag-reject{
+    color:#ff4d4d;
+    filter:drop-shadow(0 0 5px rgba(239,68,68,.9));
+    font-weight:950;
+}
+
+.issue-all-btn{
+    border:1px solid #b35d52;
+    background:#1a1110;
+    color:#ffd6d6;
+    border-radius:15px;
+    padding:13px 16px;
+    font-weight:950;
+    cursor:pointer;
+    font-size:16px;
+    text-align:center;
+}
+
+.issue-all-btn:hover{
+    border-color:#ff8f8f;
+    box-shadow:0 0 0 3px rgba(239,68,68,.15) inset;
+}
+
+.issue-modal textarea{
+    width:100%;
+    box-sizing:border-box;
+    resize:vertical;
+    min-height:92px;
+    border:1px solid #76551d;
+    border-radius:12px;
+    background:#050708;
+    color:#ffe9a7;
+    padding:10px 12px;
+    font-size:16px;
+}
+
+@media(max-width:700px){
+    .issue-slot{
+        grid-template-columns:1fr;
+    }
+
+    .issue-slot-items{
+        grid-template-columns:1fr;
+    }
+}
+
+.issue-slot-body.dragging{
+    opacity:.45;
+    transform:scale(.98);
+}
+
+/* Mobile issue custom drag: prevent browser native drag/upload overlay, keep card visible */
+@media (pointer: coarse){
+    .issue-body-card,
+    .issue-slot-body{
+        -webkit-user-drag:none;
+        user-select:none;
+    }
+
+    body.issue-mobile-dnd-active{
+        overscroll-behavior:contain;
+    }
+
+    body.issue-mobile-dnd-active .issue-body-card,
+    body.issue-mobile-dnd-active .issue-slot-body,
+    body.issue-mobile-dnd-active .issue-slot{
+        touch-action:none;
+    }
+
+    .issue-mobile-drag-ghost{
+        border:1px solid #22c55e!important;
+        border-left:8px solid #22c55e!important;
+        border-radius:16px!important;
+        background:linear-gradient(135deg,rgba(17,23,25,.98),rgba(28,20,14,.96))!important;
+        color:#fff0bd!important;
+        filter:drop-shadow(0 14px 28px rgba(0,0,0,.65));
+    }
+}

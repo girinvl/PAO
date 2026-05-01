@@ -1,0 +1,652 @@
+@media (max-width:1100px){
+
+html,
+body{
+height:auto;
+min-height:100%;
+overflow-x:hidden;
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+}
+
+body{
+padding-bottom:28px;
+}
+
+#voiceStatus{
+top:10px;
+left:10px;
+right:10px;
+text-align:center;
+font-size:15px;
+padding:11px 14px;
+}
+
+.side-panel{
+position:relative;
+width:100%;
+height:auto;
+display:grid;
+grid-template-columns:160px 1fr;
+grid-template-rows:auto auto auto;
+gap:10px;
+border-right:none;
+border-bottom:2px solid #7f5a18;
+padding:10px;
+}
+
+.anubis-photo{
+grid-row:1 / 4;
+height:auto;
+min-height:210px;
+margin-bottom:0;
+}
+
+.stats-box{
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:8px;
+margin-bottom:0;
+}
+
+.stat-line{
+font-size:15px;
+min-height:42px;
+padding:8px 9px;
+}
+
+.stat-line b{
+font-size:20px;
+}
+
+.side-links{
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:8px;
+margin-bottom:0;
+}
+
+.side-links a{
+font-size:14px;
+text-align:center;
+padding:10px 8px;
+}
+
+.hotkeys{
+font-size:12px;
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:2px 10px;
+padding:8px 0 0;
+}
+
+.layout{
+margin-left:0;
+height:auto;
+min-height:0;
+display:block;
+padding:10px;
+}
+
+.fridges{
+display:grid;
+grid-template-columns:1fr;
+gap:12px;
+height:auto;
+}
+
+.fridge{
+height:auto;
+min-height:0;
+margin-bottom:0;
+border-radius:16px;
+padding:9px;
+}
+
+.fridge-title{
+font-size:20px;
+height:auto;
+line-height:1.2;
+margin-bottom:8px;
+}
+
+.shelves{
+display:grid;
+grid-template-rows:none;
+grid-template-columns:1fr;
+gap:8px;
+height:auto;
+}
+
+.shelf{
+min-height:108px;
+margin-bottom:0;
+padding:8px;
+overflow:visible;
+}
+
+.shelf-header{
+font-size:15px;
+margin-bottom:6px;
+}
+
+.bodies{
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:7px;
+height:auto;
+}
+
+.body-chip{
+min-height:54px;
+padding:8px 9px;
+font-size:14px;
+}
+
+.body-name{
+font-size:14px;
+}
+
+.body-height{
+font-size:13px;
+}
+
+.body-meta{
+font-size:11px;
+}
+
+.unknown-zone{
+height:auto;
+min-height:120px;
+margin-top:12px;
+margin-bottom:24px;
+overflow:visible;
+}
+
+.unknown-bodies{
+height:auto;
+grid-template-columns:repeat(2,minmax(0,1fr));
+overflow:visible;
+}
+
+.unknown-chip{
+height:auto;
+min-height:54px;
+}
+
+.modal{
+align-items:flex-start;
+overflow:auto;
+padding:10px;
+}
+
+.modal-card{
+max-width:none;
+margin:16px 0;
+padding:16px;
+border-radius:18px;
+}
+
+.modal-header h2{
+font-size:25px;
+}
+
+.modal-symbol{
+font-size:28px;
+}
+
+.icon-btn{
+font-size:34px;
+}
+
+.field input,
+.field textarea,
+.field select{
+font-size:16px;
+padding:12px;
+}
+
+.filters{
+grid-template-columns:1fr;
+}
+
+.table-panel{
+padding:14px;
+}
+
+.table-header{
+padding:16px 10px;
+}
+
+.table-header h1{
+font-size:34px;
+}
+
+.stats-cards{
+grid-template-columns:1fr;
+}
+
+.bodies-table{
+font-size:13px;
+min-width:760px;
+}
+
+.table-panel{
+overflow-x:auto;
+-webkit-overflow-scrolling:touch;
+}
+}
+
+@media (max-width:640px){
+
+.side-panel{
+display:block;
+}
+
+.anubis-photo{
+height:180px;
+min-height:180px;
+margin-bottom:10px;
+}
+
+.stats-box{
+grid-template-columns:repeat(2,minmax(0,1fr));
+margin-bottom:10px;
+}
+
+.side-links{
+grid-template-columns:1fr;
+margin-bottom:10px;
+}
+
+.hotkeys{
+grid-template-columns:1fr;
+font-size:12px;
+}
+
+.layout{
+padding:8px;
+}
+
+.fridges{
+gap:10px;
+}
+
+.fridge{
+border-radius:14px;
+padding:8px;
+}
+
+.shelf{
+min-height:96px;
+}
+
+.bodies,
+.unknown-bodies{
+grid-template-columns:1fr;
+}
+
+.modal-actions,
+.status-buttons{
+flex-direction:column;
+}
+
+.modal-actions button,
+.status-buttons button{
+width:100%;
+}
+}
+
+@media (max-width:380px){
+
+.stats-box{
+grid-template-columns:1fr;
+}
+
+.table-link{
+margin:4px 6px;
+}
+
+.body-main{
+align-items:flex-start;
+}
+}
+
+/* Mobile dispatcher UI: compact header, bottom actions and sheet menu */
+.mobile-topbar,
+.mobile-menu-backdrop,
+.mobile-sheet,
+.mobile-bottom-actions{
+    display:none;
+}
+
+@media (max-width:640px){
+    body{
+        padding-top:58px;
+        padding-bottom:86px;
+    }
+
+    body.mobile-menu-open{
+        overflow:hidden;
+    }
+
+    .mobile-topbar{
+        position:fixed;
+        top:0;
+        left:0;
+        right:0;
+        height:56px;
+        z-index:60;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        padding:8px 12px;
+        background:rgba(7,9,9,.96);
+        border-bottom:2px solid #7f5a18;
+        box-shadow:0 8px 24px rgba(0,0,0,.38);
+        backdrop-filter:blur(8px);
+    }
+
+    .mobile-title{
+        color:#ffd45a;
+        font-weight:950;
+        font-size:20px;
+        letter-spacing:.03em;
+    }
+
+    .mobile-menu-button,
+    .mobile-sheet-close{
+        border:1px solid #8b6a25;
+        background:#111719;
+        color:#ffd45a;
+        border-radius:13px;
+        min-width:44px;
+        height:42px;
+        font-size:26px;
+        font-weight:900;
+        line-height:1;
+    }
+
+    .side-panel{
+        display:none;
+    }
+
+    .anubis-photo{
+        display:none;
+    }
+
+    .layout{
+        margin-left:0;
+        padding:8px;
+    }
+
+    .mobile-menu-backdrop{
+        position:fixed;
+        inset:0;
+        z-index:80;
+        display:block;
+        background:rgba(0,0,0,.58);
+        opacity:0;
+        transition:opacity .18s ease;
+    }
+
+    .mobile-menu-backdrop.open{
+        opacity:1;
+    }
+
+    .mobile-sheet{
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:0;
+        z-index:90;
+        display:block;
+        max-height:82vh;
+        overflow:auto;
+        transform:translateY(105%);
+        transition:transform .22s ease;
+        background:#080b0c;
+        border-top:2px solid #8b6a25;
+        border-radius:22px 22px 0 0;
+        box-shadow:0 -18px 45px rgba(0,0,0,.62);
+        padding:10px 14px 18px;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .mobile-sheet.open{
+        transform:translateY(0);
+    }
+
+    .mobile-sheet-handle{
+        width:48px;
+        height:5px;
+        border-radius:999px;
+        background:#7f5a18;
+        margin:0 auto 10px;
+        opacity:.9;
+    }
+
+    .mobile-sheet-header{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        color:#ffd45a;
+        font-size:22px;
+        font-weight:950;
+        margin-bottom:12px;
+    }
+
+    .mobile-sheet-stats{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:9px;
+        margin-bottom:12px;
+    }
+
+    .mobile-stat{
+        background:#111719;
+        border:1px solid #76551d;
+        border-radius:14px;
+        padding:10px 11px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:8px;
+        color:#ffd45a;
+        font-weight:800;
+        min-height:48px;
+    }
+
+    .mobile-stat span{
+        font-size:14px;
+    }
+
+    .mobile-stat b{
+        color:#fff0bd;
+        font-size:21px;
+    }
+
+    .mobile-sheet-links{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:9px;
+        margin-bottom:12px;
+    }
+
+    .mobile-sheet-links a{
+        display:block;
+        padding:14px 13px;
+        border-radius:15px;
+        background:#111719;
+        border:1px solid #76551d;
+        color:#ffd45a;
+        text-decoration:none;
+        font-weight:900;
+        font-size:17px;
+    }
+
+    .mobile-sheet-help{
+        color:#c7a65e;
+        font-size:13px;
+        line-height:1.35;
+        border-top:1px solid rgba(157,111,36,.45);
+        padding-top:11px;
+    }
+
+    .mobile-bottom-actions{
+        position:fixed;
+        left:8px;
+        right:8px;
+        bottom:8px;
+        z-index:55;
+        display:grid;
+        grid-template-columns:repeat(5,1fr);
+        gap:6px;
+        padding:7px;
+        border:1px solid #76551d;
+        border-radius:18px;
+        background:rgba(7,9,9,.96);
+        box-shadow:0 -8px 28px rgba(0,0,0,.42);
+        backdrop-filter:blur(8px);
+    }
+
+    .mobile-bottom-actions button{
+        min-height:54px;
+        border:1px solid rgba(127,90,24,.86);
+        border-radius:14px;
+        background:#111719;
+        color:#ffd45a;
+        font-size:21px;
+        font-weight:950;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        gap:2px;
+    }
+
+    .mobile-bottom-actions span{
+        font-size:10px;
+        line-height:1;
+        color:#f0d99a;
+        font-weight:800;
+    }
+
+    #voiceStatus{
+        top:64px;
+        z-index:95;
+    }
+
+    .unknown-zone{
+        margin-bottom:92px;
+    }
+}
+
+@media (max-width:640px){
+    .selected-nav{
+        outline:none!important;
+        box-shadow:none!important;
+    }
+
+    .mobile-bottom-actions{
+        display:none!important;
+    }
+
+    body{
+        padding-bottom:22px;
+    }
+
+    .unknown-zone{
+        margin-bottom:24px;
+    }
+
+    .modal-header{
+        display:grid;
+        grid-template-columns:auto 1fr auto;
+        gap:8px;
+        align-items:center;
+    }
+
+    .modal-header h2{
+        font-size:22px;
+        min-width:0;
+    }
+
+    .voice-form-btn{
+        grid-column:1 / -1;
+        min-height:48px;
+        font-size:18px;
+        margin-top:4px;
+    }
+
+    .flag-picker label{
+        min-height:54px;
+        font-size:16px;
+    }
+
+    .clear-field-btn{
+        width:42px;
+        height:42px;
+        font-size:28px;
+    }
+}
+
+
+/* FIX: предыдущий мобильный backdrop был невидимым, но перекрывал весь экран.
+   Из-за этого не открывались форма, drag&drop и меню. */
+.mobile-menu-backdrop[hidden]{
+    display:none!important;
+    pointer-events:none!important;
+}
+
+@media (max-width:640px){
+    .mobile-menu-backdrop{
+        display:none;
+        pointer-events:none;
+    }
+
+    .mobile-menu-backdrop.open{
+        display:block;
+        pointer-events:auto;
+    }
+
+    .mobile-sheet{
+        pointer-events:none;
+    }
+
+    .mobile-sheet.open{
+        pointer-events:auto;
+    }
+
+    .mobile-topbar{
+        z-index:120;
+        pointer-events:auto;
+    }
+
+    .mobile-menu-button{
+        pointer-events:auto;
+    }
+
+    .layout,
+    .fridges,
+    .shelf,
+    .body-chip,
+    .unknown-zone{
+        pointer-events:auto;
+    }
+
+    /* На мобильном рамку выделения убираем полностью. */
+    .selected-nav,
+    .body-chip.selected-nav,
+    .shelf.selected-nav,
+    .unknown-zone.selected-nav{
+        outline:none!important;
+        box-shadow:none!important;
+    }
+
+    /* Оставляем только верхнее сворачивающееся меню, без нижней панели. */
+    .mobile-bottom-actions{
+        display:none!important;
+    }
+
+    body{
+        padding-bottom:22px;
+    }
+}

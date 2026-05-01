@@ -1,0 +1,89 @@
+/* === ANUBIS ISSUE V4: reject background + autopsy border restore === */
+
+/*
+  Отказ больше не должен выглядеть как красная аварийная рамка.
+  Рамка остаётся по статусу вскрытия, а отказ отмечается полупрозрачной полосатой заливкой.
+*/
+
+.issue-reject,
+.issue-body-reject,
+.issue-card-reject,
+.body-chip.issue-reject,
+.issue-body-card.issue-reject,
+.issue-schedule-body.issue-reject,
+.issue-list-body.issue-reject{
+    background-image:
+        repeating-linear-gradient(
+            135deg,
+            rgba(255, 0, 0, .10) 0,
+            rgba(255, 0, 0, .10) 7px,
+            rgba(255, 255, 255, .025) 7px,
+            rgba(255, 255, 255, .025) 14px
+        ) !important;
+    box-shadow:none!important;
+}
+
+/* Рамка по статусу вскрытия. Несколько селекторов специально, чтобы попасть в текущую разметку. */
+.issue-body-card.status-1,
+.issue-list-body.status-1,
+.issue-schedule-body.status-1,
+.issue-body.status-1,
+.issue-card.status-1,
+.issue-reject.status-1,
+.body-chip.status-1.issue-reject{
+    border-color:#b45309!important;
+}
+
+.issue-body-card.status-2,
+.issue-list-body.status-2,
+.issue-schedule-body.status-2,
+.issue-body.status-2,
+.issue-card.status-2,
+.issue-reject.status-2,
+.body-chip.status-2.issue-reject{
+    border-color:#15803d!important;
+}
+
+/* Если в проекте используются классы autopsy-1/autopsy-2. */
+.issue-body-card.autopsy-1,
+.issue-list-body.autopsy-1,
+.issue-schedule-body.autopsy-1,
+.issue-body.autopsy-1,
+.issue-card.autopsy-1,
+.issue-reject.autopsy-1{
+    border-color:#b45309!important;
+}
+
+.issue-body-card.autopsy-2,
+.issue-list-body.autopsy-2,
+.issue-schedule-body.autopsy-2,
+.issue-body.autopsy-2,
+.issue-card.autopsy-2,
+.issue-reject.autopsy-2{
+    border-color:#15803d!important;
+}
+
+/* Слоты времени должны ясно принимать drop. */
+.issue-time-slot,
+.issue-slot,
+.time-slot,
+[data-issue-date][data-issue-time],
+[data-date][data-time]{
+    position:relative;
+}
+
+.issue-time-slot.issue-drop-active,
+.issue-slot.issue-drop-active,
+.time-slot.issue-drop-active,
+[data-issue-date][data-issue-time].issue-drop-active,
+[data-date][data-time].issue-drop-active{
+    outline:2px dashed #ffd45a!important;
+    outline-offset:-4px;
+    background-color:rgba(255,212,90,.08)!important;
+}
+
+.issue-time-slot.issue-drop-full,
+.issue-slot.issue-drop-full,
+.time-slot.issue-drop-full{
+    outline-color:#ef4444!important;
+}

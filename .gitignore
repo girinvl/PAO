@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+venv/
+.env/
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+*.bin
+
+# Logs
+*.log
+
+# Uploads / temp
+uploads/
+wheels/
+tmp/
+temp/
+
+# Database (если есть локальная)
+*.sqlite3
+
+# Node (если вдруг есть)
+node_modules/
+
+# Build
+dist/
+build/
+
+# secrets/certs
+certs/
+*.key
+*.pem
+*.crt
+
+# local env / build cache
+.venv_wheelhouse/

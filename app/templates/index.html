@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Анубис</title>
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+/* === Anubis compact edit modal fix === */
+#modal.hidden{
+    display:none !important;
+}
+
+#modal.modal:not(.hidden){
+    position:fixed !important;
+    inset:0 !important;
+    z-index:9999 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:24px !important;
+    background:rgba(0,0,0,.62) !important;
+    backdrop-filter:blur(3px);
+}
+
+#modal .modal-card{
+    position:relative !important;
+    width:min(720px, calc(100vw - 48px)) !important;
+    max-height:calc(100vh - 48px) !important;
+    overflow:auto !important;
+    margin:0 !important;
+    padding:18px 20px 16px !important;
+    border:1px solid rgba(255,212,90,.48) !important;
+    border-radius:18px !important;
+    background:linear-gradient(180deg, rgba(18,24,25,.98), rgba(8,11,12,.98)) !important;
+    color:#f4d98b !important;
+    box-shadow:0 24px 70px rgba(0,0,0,.72), 0 0 0 1px rgba(255,212,90,.12) inset !important;
+}
+
+#modal .modal-header{
+    display:grid !important;
+    grid-template-columns:auto 1fr auto auto !important;
+    align-items:center !important;
+    gap:10px !important;
+    margin:0 0 12px !important;
+}
+
+#modal .modal-symbol{
+    color:#ffd45a !important;
+    font-size:26px !important;
+    line-height:1 !important;
+}
+
+#modal .modal-header h2{
+    margin:0 !important;
+    color:#ffd45a !important;
+    font-size:24px !important;
+    line-height:1.08 !important;
+}
+
+#modal .voice-form-btn,
+#modal .icon-btn{
+    min-height:34px !important;
+    padding:7px 11px !important;
+    border-radius:11px !important;
+}
+
+#bodyForm{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:10px 14px !important;
+    align-items:start !important;
+}
+
+#bodyForm .field{
+    margin:0 !important;
+}
+
+#bodyForm .field label{
+    display:block !important;
+    margin:0 0 5px !important;
+    color:#f6d86d !important;
+    font-size:13px !important;
+    font-weight:800 !important;
+    line-height:1.15 !important;
+}
+
+#bodyForm .clearable-field{
+    position:relative !important;
+}
+
+#bodyForm input,
+#bodyForm select,
+#bodyForm textarea{
+    width:100% !important;
+    box-sizing:border-box !important;
+    min-height:38px !important;
+    padding:8px 38px 8px 10px !important;
+    border-radius:10px !important;
+    border:1px solid rgba(190,207,214,.42) !important;
+    background:#1b2325 !important;
+    color:#f8edc7 !important;
+    font-size:14px !important;
+    outline:none !important;
+}
+
+#bodyForm textarea{
+    min-height:72px !important;
+    resize:vertical !important;
+}
+
+#bodyForm .clear-field-btn{
+    position:absolute !important;
+    right:7px !important;
+    top:50% !important;
+    transform:translateY(-50%) !important;
+    width:26px !important;
+    height:26px !important;
+    min-height:26px !important;
+    padding:0 !important;
+    border-radius:999px !important;
+    border:1px solid rgba(255,212,90,.45) !important;
+    color:#ffd45a !important;
+    background:rgba(0,0,0,.25) !important;
+    font-size:17px !important;
+    line-height:1 !important;
+}
+
+#bodyForm .clearable-textarea .clear-field-btn{
+    top:12px !important;
+    transform:none !important;
+}
+
+#bodyForm .field-comment,
+#bodyForm .field-status,
+#bodyForm .field-flags,
+#bodyForm .modal-actions{
+    grid-column:1 / -1 !important;
+}
+
+#bodyForm .field-status .status-buttons{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+    margin-top:8px !important;
+}
+
+#bodyForm .field-status .status-buttons button{
+    min-height:34px !important;
+    padding:7px 10px !important;
+    border-radius:10px !important;
+    font-weight:900 !important;
+}
+
+#bodyForm .flag-picker,
+#bodyForm .flag-picker-compact{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+}
+
+#bodyForm .flag-picker label{
+    display:flex !important;
+    align-items:center !important;
+    gap:8px !important;
+    min-height:38px !important;
+    margin:0 !important;
+    padding:8px 10px !important;
+    border:1px solid rgba(255,212,90,.38) !important;
+    border-radius:12px !important;
+    background:rgba(255,255,255,.035) !important;
+    color:#f4d98b !important;
+    font-size:13px !important;
+    font-weight:900 !important;
+    cursor:pointer !important;
+}
+
+#bodyForm .flag-picker input{
+    width:18px !important;
+    height:18px !important;
+    min-height:18px !important;
+    padding:0 !important;
+    accent-color:#ffd45a !important;
+}
+
+#bodyForm .modal-actions{
+    display:grid !important;
+    grid-template-columns:1fr 1fr 1fr !important;
+    gap:10px !important;
+    margin-top:2px !important;
+}
+
+#bodyForm .modal-actions button{
+    min-height:42px !important;
+    border-radius:12px !important;
+    font-weight:900 !important;
+}
+
+#modal .help{
+    margin-top:10px !important;
+    color:#cdbb80 !important;
+    font-size:12px !important;
+    line-height:1.35 !important;
+    opacity:.78 !important;
+}
+
+@media (max-width:768px){
+    #modal.modal:not(.hidden){
+        align-items:flex-start !important;
+        padding:10px !important;
+        overflow:auto !important;
+    }
+
+    #modal .modal-card{
+        width:calc(100vw - 20px) !important;
+        max-height:none !important;
+        padding:14px !important;
+    }
+
+    #bodyForm{
+        grid-template-columns:1fr !important;
+    }
+
+    #bodyForm .flag-picker,
+    #bodyForm .flag-picker-compact{
+        grid-template-columns:1fr 1fr !important;
+    }
+
+    #bodyForm .modal-actions{
+        grid-template-columns:1fr !important;
+    }
+}
+</style>
+
+</head>
+<body>
+
+<div id="voiceStatus"></div>
+
+<header class="mobile-topbar" aria-label="Мобильная панель Анубиса">
+    <div class="mobile-title">☥ Анубис</div>
+    <button type="button" class="mobile-menu-button" id="mobileMenuOpen" aria-label="Открыть меню">☰</button>
+</header>
+
+<div class="mobile-menu-backdrop" id="mobileMenuBackdrop" hidden></div>
+<section class="mobile-sheet" id="mobileSheet" aria-hidden="true">
+    <div class="mobile-sheet-handle"></div>
+    <div class="mobile-sheet-header">
+        <div>Меню</div>
+        <button type="button" class="mobile-sheet-close" id="mobileMenuClose" aria-label="Закрыть меню">×</button>
+    </div>
+
+    <div class="mobile-sheet-stats">
+        <div class="mobile-stat"><span>⚰️ В морге</span><b>{{ total_active }}</b></div>
+        <div class="mobile-stat"><span>📦 Занято</span><b>{{ 15 - free_shelves }}/15</b></div>
+        <div class="mobile-stat"><span>🟩 Свободно</span><b>{{ free_shelves }}</b></div>
+        <div class="mobile-stat"><span>📅 Неделя</span><b>{{ week_total }}</b></div>
+        <div class="mobile-stat"><span>🌙 Месяц</span><b>{{ month_total }}</b></div>
+        <div class="mobile-stat"><span>☀️ Год</span><b>{{ year_total }}</b></div>
+    </div>
+
+    <nav class="mobile-sheet-links">
+        <a href="/table">📋 Таблица</a>
+        <a href="/stats">📊 Графики</a>
+        <a href="/issue">🚪 Выдача</a>
+        <a href="/faq">❔ FAQ</a>
+    </nav>
+
+    <div class="mobile-sheet-help">
+        На мобильном: удержание — перенос тела, двойной тап — смена статуса вскрытия.
+    </div>
+</section>
+
+<aside class="side-panel">
+    <div class="anubis-photo"></div>
+
+    <div class="stats-box">
+        <div class="stat-line" title="Сейчас в морге">⚰️ <b>{{ total_active }}</b></div>
+        <div class="stat-line" title="Занято полок">📦 <b>{{ 15 - free_shelves }}/15</b></div>
+        <div class="stat-line" title="Свободно полок">🟩 <b>{{ free_shelves }}</b></div>
+        <div class="stat-line" title="Поступило за неделю">📅 <b>{{ week_total }}</b></div>
+        <div class="stat-line" title="Поступило за месяц">🌙 <b>{{ month_total }}</b></div>
+        <div class="stat-line" title="Поступило за год">☀️ <b>{{ year_total }}</b></div>
+    </div>
+
+    <nav class="side-links">
+        <a href="/table">📋 Таблица</a>
+        <a href="/stats">📊 Графики</a>
+        <a href="/issue">🚪 Выдача</a>
+        <a href="/faq">❔ FAQ</a>
+    </nav>
+
+    <div class="hotkeys">
+        ←/→ холодильники<br>
+        ↑/↓ полки и тела<br>
+        Enter открыть<br>
+        Space взять/положить<br>
+        V голосовой код<br>
+        L голосовой рост
+    </div>
+</aside>
+
+<main class="layout">
+<section class="fridges">
+
+{% for fridge in fridge_map %}
+<div class="fridge">
+<div class="fridge-title">Холодильник {{ fridge.fridge }}</div>
+
+<div class="shelves">
+{% for shelf in fridge.shelves|reverse %}
+<div
+class="shelf {{ shelf.color_class }}"
+data-nav-type="shelf"
+data-fridge="{{ fridge.fridge }}"
+data-shelf="{{ shelf.shelf }}"
+onclick="Anubis.openShelfModal({{ fridge.fridge }},{{ shelf.shelf }})"
+>
+
+<div class="shelf-header">Полка {{ shelf.shelf }}</div>
+
+{% if shelf.bodies %}
+<div class="bodies">
+{% for b in shelf.bodies %}
+<div
+class="body-chip status-{{ b.autopsy }}{% if b.issue_planned_at and b.issue_planned_at.strftime('%Y-%m-%d') == today_str %} issue-today{% endif %}{% if b.issue_reject %} issue-reject{% endif %}"
+data-nav-type="body"
+data-body-id="{{ b.id }}"
+data-surname="{{ b.surname|lower }}"
+onmouseenter="Anubis.hoveredBodyId={{ b.id }}"
+onmouseleave="if(Anubis.hoveredBodyId==={{ b.id }}) Anubis.hoveredBodyId=null"
+onclick="event.stopPropagation(); Anubis.openEditModal({{ b.id }})"
+>
+
+<div class="body-main">
+<span class="body-name">
+{{ b.surname }}{% if b.initials %} {{ b.initials }}{% endif %}
+{% if b.has_comment %}<span class="bell">🔔</span>{% endif %}
+{% if b.is_duplicate_surname %}<span class="warn duplicate-warn" title="Похожие фамилии">❗</span>{% endif %}
+{% if b.is_old %}<span class="poop">💩</span>{% endif %}
+{% if b.issue_reject %}
+<span class="body-flag flag-reject" title="Отказ">❌</span>
+{% else %}
+{% if b.flag_blue_face %}<span class="body-flag flag-blink" title="Синий">🔵</span>{% endif %}
+{% if b.flag_crooked_leg %}<span class="body-flag flag-blink" title="Кривой">🦵</span>{% endif %}
+{% if b.flag_vegetation %}<span class="body-flag flag-blink" title="Растительность">🌿</span>{% endif %}
+{% if b.flag_defects %}<span class="body-flag flag-blink" title="Дефекты">⚠️</span>{% endif %}
+{% if b.issue_clothes %}<span class="body-flag" title="Одежда">👕</span>{% endif %}
+{% if b.issue_shave_clean %}<span class="body-flag" title="Брить чисто">🪒</span>{% endif %}
+{% if b.issue_beautify or b.issue_beard %}<span class="body-flag" title="Облагородить">✨</span>{% endif %}
+{% if b.issue_mustache %}<span class="body-flag" title="Усы">〰️</span>{% endif %}
+{% if b.issue_funeral %}<span class="body-flag" title="Отпевание">⛪</span>{% endif %}
+{% endif %}
+</span>
+
+<span class="body-height">
+{% if b.flag_marshmallow %}<span class="body-flag flag-blink body-fat-flag" title="Толстый">🧸</span>{% endif %}
+{% if b.height %}{{ b.height }}{% endif %}
+</span>
+</div>
+
+<div class="body-meta">
+{{ b.fridge }}{{ b.shelf }}{{ b.autopsy }}
+· {% if b.autopsy==2 %}вскрыт{% else %}не вскрыт{% endif %}
+</div>
+
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-text">Пусто</div>
+{% endif %}
+
+</div>
+{% endfor %}
+</div>
+</div>
+{% endfor %}
+
+</section>
+
+<section
+class="unknown-zone"
+data-nav-type="unknown-zone"
+data-fridge="0"
+data-shelf="0"
+onclick="Anubis.openUnknownModal()"
+>
+
+<div class="unknown-title">Без места / на полу</div>
+
+<div class="unknown-bodies">
+{% if unknown_bodies %}
+{% for b in unknown_bodies %}
+<div
+class="body-chip unknown-chip status-{{ b.autopsy }}{% if b.issue_planned_at and b.issue_planned_at.strftime('%Y-%m-%d') == today_str %} issue-today{% endif %}{% if b.issue_reject %} issue-reject{% endif %}"
+data-nav-type="body"
+data-body-id="{{ b.id }}"
+data-surname="{{ b.surname|lower }}"
+onmouseenter="Anubis.hoveredBodyId={{ b.id }}"
+onmouseleave="if(Anubis.hoveredBodyId==={{ b.id }}) Anubis.hoveredBodyId=null"
+onclick="event.stopPropagation(); Anubis.openEditModal({{ b.id }})"
+>
+
+<div class="body-main">
+<span class="body-name">
+{{ b.surname }}{% if b.initials %} {{ b.initials }}{% endif %}
+{% if b.has_comment %}<span class="bell">🔔</span>{% endif %}
+{% if b.is_duplicate_surname %}<span class="warn duplicate-warn" title="Похожие фамилии">❗</span>{% endif %}
+{% if b.is_old %}<span class="poop">💩</span>{% endif %}
+{% if b.issue_reject %}
+<span class="body-flag flag-reject" title="Отказ">❌</span>
+{% else %}
+{% if b.flag_blue_face %}<span class="body-flag flag-blink" title="Синий">🔵</span>{% endif %}
+{% if b.flag_crooked_leg %}<span class="body-flag flag-blink" title="Кривой">🦵</span>{% endif %}
+{% if b.flag_vegetation %}<span class="body-flag flag-blink" title="Растительность">🌿</span>{% endif %}
+{% if b.flag_defects %}<span class="body-flag flag-blink" title="Дефекты">⚠️</span>{% endif %}
+{% if b.issue_clothes %}<span class="body-flag" title="Одежда">👕</span>{% endif %}
+{% if b.issue_shave_clean %}<span class="body-flag" title="Брить чисто">🪒</span>{% endif %}
+{% if b.issue_beautify or b.issue_beard %}<span class="body-flag" title="Облагородить">✨</span>{% endif %}
+{% if b.issue_mustache %}<span class="body-flag" title="Усы">〰️</span>{% endif %}
+{% if b.issue_funeral %}<span class="body-flag" title="Отпевание">⛪</span>{% endif %}
+{% endif %}
+</span>
+
+<span class="body-height">
+{% if b.flag_marshmallow %}<span class="body-flag flag-blink body-fat-flag" title="Толстый">🧸</span>{% endif %}
+{% if b.height %}{{ b.height }}{% endif %}
+</span>
+</div>
+
+<div class="body-meta">
+без места · {% if b.autopsy==2 %}вскрыт{% else %}не вскрыт{% endif %}
+</div>
+
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-text">Нет записей без места</div>
+{% endif %}
+</div>
+
+</section>
+</main>
+
+
+
+<div id="modal" class="modal hidden">
+<div class="modal-card">
+
+<div class="modal-header">
+<div class="modal-symbol">☥</div>
+<h2 id="modalTitle">Тело</h2>
+<button type="button" class="voice-form-btn" onclick="Anubis.startFormVoice()">🎤 Запись</button>
+<button type="button" class="icon-btn" onclick="Anubis.closeShelfModal()">×</button>
+</div>
+
+<form id="bodyForm" onsubmit="Anubis.saveBody(event)">
+<input type="hidden" id="body_id" value="0">
+<input type="hidden" id="fridge" value="1">
+<input type="hidden" id="shelf" value="1">
+
+<div class="field field-surname">
+<label>Фамилия</label>
+<div class="clearable-field">
+<input id="surname" autocomplete="off">
+<button type="button" class="clear-field-btn" data-clear-target="surname" aria-label="Очистить фамилию">×</button>
+</div>
+</div>
+
+<div class="field field-initials">
+<label>Инициалы</label>
+<div class="clearable-field">
+<input id="initials" autocomplete="off">
+<button type="button" class="clear-field-btn" data-clear-target="initials" aria-label="Очистить инициалы">×</button>
+</div>
+</div>
+
+<div class="field field-height">
+<label>Рост</label>
+<div class="clearable-field">
+<input id="height" type="number" autocomplete="off">
+<button type="button" class="clear-field-btn" data-clear-target="height" aria-label="Очистить рост">×</button>
+</div>
+</div>
+
+<div class="field field-comment">
+<label>Комментарий</label>
+<div class="clearable-field clearable-textarea">
+<textarea id="comment" rows="4"></textarea>
+<button type="button" class="clear-field-btn" data-clear-target="comment" aria-label="Очистить комментарий">×</button>
+</div>
+</div>
+
+<div class="field field-status">
+<label>Статус</label>
+
+<select id="autopsy">
+<option value="1">Не вскрыт</option>
+<option value="2">Вскрыт</option>
+</select>
+
+<div class="status-buttons">
+<button type="button" onclick="Anubis.setModalStatus(1)">1 · Не вскрыт</button>
+<button type="button" onclick="Anubis.setModalStatus(2)">2 · Вскрыт</button>
+</div>
+</div>
+
+<div class="field field-flags">
+<label>Мерцающие значки</label>
+<div class="flag-picker flag-picker-compact">
+<label class="flag-toggle"><input type="checkbox" id="flag_marshmallow" value="1"> <span>🧸 Толстый</span></label>
+<label class="flag-toggle"><input type="checkbox" id="flag_blue_face" value="1"> <span>🔵 Синий</span></label>
+<label class="flag-toggle"><input type="checkbox" id="flag_crooked_leg" value="1"> <span>🦵 Кривой</span></label>
+<label class="flag-toggle"><input type="checkbox" id="flag_vegetation" value="1"> <span>🌿 Растительность</span></label>
+<label class="flag-toggle"><input type="checkbox" id="flag_defects" value="1"> <span>⚠️ Дефекты</span></label>
+<label class="flag-toggle danger-toggle"><input type="checkbox" id="issue_reject" value="1"> <span>❌ Отказ</span></label>
+</div>
+</div>
+
+<div class="modal-actions">
+<button type="submit" class="save-btn">Сохранить</button>
+<button type="button" onclick="Anubis.closeShelfModal()">Отмена</button>
+<button type="button" class="danger" onclick="Anubis.deleteBody()">Выдать</button>
+</div>
+</form>
+
+<div class="help">
+Enter — сохранить<br>
+Esc — отмена<br>
+Space — взять/положить тело
+</div>
+
+</div>
+</div>
+
+<script src="/static/js/state.js"></script>
+<script src="/static/js/sync.js"></script>
+<script src="/static/js/navigation.js"></script>
+<script src="/static/js/modal.js"></script>
+<script src="/static/js/speech.js"></script>
+<script src="/static/js/actions.js"></script>
+<script src="/static/js/drag.js"></script>
+<script src="/static/js/hotkeys.js"></script>
+<script src="/static/js/mobile_menu.js"></script>
+<script src="/static/js/app.js"></script>
+
+</body>
+</html>

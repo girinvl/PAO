@@ -1,0 +1,367 @@
+window.Anubis = window.Anubis || {};
+
+Anubis.fillShortFormFromParsed = function(parsed){
+    if (!parsed) return;
+
+    const surnameEl = document.getElementById("surname");
+    const initialsEl = document.getElementById("initials");
+    const heightEl = document.getElementById("height");
+
+    if (surnameEl && parsed.surname) {
+        surnameEl.value = Anubis.formatSurname
+            ? Anubis.formatSurname(parsed.surname || "")
+            : Anubis.cleanRecognizedText(parsed.surname || "");
+    }
+
+    // Инициалы заполняем только если бэкенд явно вернул их из полного имени+отчества.
+    // Сокращения типа "ИА" теперь игнорируются.
+    if (initialsEl && parsed.initials_from_full_name) {
+        initialsEl.value = Anubis.formatInitials
+            ? Anubis.formatInitials(parsed.initials || "")
+            : Anubis.cleanRecognizedText(parsed.initials || "").toUpperCase();
+    }
+
+    if (heightEl && parsed.height) {
+        heightEl.value = Anubis.cleanNumber(parsed.height || "");
+    }
+};
+
+Anubis.stopStreamTracks = function(){
+    if (Anubis.currentStream) {
+        Anubis.currentStream.getTracks().forEach(t => t.stop());
+        Anubis.currentStream = null;
+    }
+};
+
+Anubis.cleanupAudio = function(){
+    if (Anubis.monitorInterval) clearInterval(Anubis.monitorInterval);
+    if (Anubis.silenceTimer) clearTimeout(Anubis.silenceTimer);
+
+    if (Anubis.sourceNode) {
+        try { Anubis.sourceNode.disconnect(); } catch(e) {}
+        Anubis.sourceNode = null;
+    }
+
+    if (Anubis.audioContext) {
+        try { Anubis.audioContext.close(); } catch(e) {}
+    }
+
+    Anubis.monitorInterval = null;
+    Anubis.silenceTimer = null;
+    Anubis.audioContext = null;
+    Anubis.analyser = null;
+};
+
+Anubis.getAverageVolume = function(){
+    if (!Anubis.analyser) return 0;
+
+    const buffer = new Uint8Array(Anubis.analyser.fftSize);
+    Anubis.analyser.getByteTimeDomainData(buffer);
+
+    let sum = 0;
+
+    for (let i=0;i<buffer.length;i++) {
+        const n = (buffer[i] - 128) / 128;
+        sum += n * n;
+    }
+
+    return Math.sqrt(sum / buffer.length);
+};
+
+Anubis.armSilence = function(){
+    if (Anubis.silenceTimer) return;
+
+    Anubis.silenceTimer = setTimeout(() => {
+        Anubis.stopVoiceRecording(false);
+    }, Anubis.SILENCE_DURATION_MS);
+};
+
+Anubis.disarmSilence = function(){
+    if (Anubis.silenceTimer) {
+        clearTimeout(Anubis.silenceTimer);
+        Anubis.silenceTimer = null;
+    }
+};
+
+Anubis.startMonitoring = function(stream){
+    Anubis.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    Anubis.analyser = Anubis.audioContext.createAnalyser();
+    Anubis.analyser.fftSize = 2048;
+
+    Anubis.sourceNode = Anubis.audioContext.createMediaStreamSource(stream);
+    Anubis.sourceNode.connect(Anubis.analyser);
+
+    Anubis.monitorInterval = setInterval(() => {
+        const vol = Anubis.getAverageVolume();
+
+        if (vol < Anubis.SILENCE_THRESHOLD) {
+            Anubis.armSilence();
+        } else {
+            Anubis.disarmSilence();
+        }
+    }, Anubis.CHECK_INTERVAL_MS);
+};
+
+Anubis.sendAudioForShort = async function(blob){
+    const fd = new FormData();
+    fd.append("audio", blob, "voice.webm");
+
+    Anubis.showVoiceStatus("Распознавание...");
+
+    let endpoint = "/stt-short";
+
+    if (Anubis.voiceMode === "move") endpoint = "/stt-move-code";
+    if (Anubis.voiceMode === "height") endpoint = "/stt-height-code";
+
+    const r = await fetch(endpoint, {
+        method: "POST",
+        body: fd
+    });
+
+    const data = await r.json();
+
+    if (!data.success) {
+        Anubis.showVoiceStatus(data.error || "Не распознано", true);
+        Anubis.voiceMode = "short";
+        Anubis.voiceMoveBodyId = null;
+        Anubis.voiceHeightBodyId = null;
+        return;
+    }
+
+    if (Anubis.voiceMode === "move") {
+        await Anubis.applyVoiceMoveCode(data.parsed);
+        Anubis.voiceMode = "short";
+        return;
+    }
+
+    if (Anubis.voiceMode === "height") {
+        await Anubis.applyVoiceHeightCode(data.parsed);
+        Anubis.voiceMode = "short";
+        return;
+    }
+
+    Anubis.fillShortFormFromParsed(data.parsed);
+    Anubis.showVoiceStatus(`Заполнено: ${Anubis.cleanRecognizedText(data.text || "")}`);
+};
+
+Anubis.stopVoiceRecording = async function(cancel=false){
+    if (!Anubis.isRecording || !Anubis.mediaRecorder) return;
+
+    Anubis.isRecording = false;
+    Anubis.cleanupAudio();
+
+    await new Promise(resolve => {
+        Anubis.mediaRecorder.onstop = async () => {
+            const blob = new Blob(Anubis.audioChunks, { type: "audio/webm" });
+
+            Anubis.stopStreamTracks();
+
+            if (!cancel) {
+                await Anubis.sendAudioForShort(blob);
+            }
+
+            Anubis.audioChunks = [];
+            Anubis.mediaRecorder = null;
+
+            resolve();
+        };
+
+        Anubis.mediaRecorder.stop();
+    });
+};
+
+Anubis.startVoice = async function(){
+    if (Anubis.isRecording) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        Anubis.showVoiceStatus("Микрофон доступен только через HTTPS или localhost", true);
+        return;
+    }
+
+    try {
+        Anubis.currentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        Anubis.audioChunks = [];
+
+        const preferred = [
+            "audio/webm;codecs=opus",
+            "audio/webm",
+            "audio/mp4"
+        ];
+
+        let mimeType = "";
+
+        for (const t of preferred) {
+            if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) {
+                mimeType = t;
+                break;
+            }
+        }
+
+        Anubis.mediaRecorder = mimeType
+            ? new MediaRecorder(Anubis.currentStream, { mimeType })
+            : new MediaRecorder(Anubis.currentStream);
+
+        Anubis.mediaRecorder.ondataavailable = e => {
+            if (e.data && e.data.size > 0) {
+                Anubis.audioChunks.push(e.data);
+            }
+        };
+
+        Anubis.isRecording = true;
+        Anubis.startMonitoring(Anubis.currentStream);
+
+        Anubis.showVoiceStatus("Идет запись...");
+        Anubis.mediaRecorder.start();
+
+    } catch(err) {
+        Anubis.showVoiceStatus("Ошибка микрофона: " + err.message, true);
+        Anubis.stopStreamTracks();
+        Anubis.cleanupAudio();
+        Anubis.isRecording = false;
+    }
+};
+
+Anubis.moveSelectedBodyByVoice = async function(){
+    const bodyId = Anubis.getActiveBodyIdForVoice();
+
+    if (!bodyId) {
+        Anubis.showVoiceStatus("Выберите или наведите труп для голосового перемещения", true);
+        return;
+    }
+
+    Anubis.carriedBodyId = null;
+    Anubis.carriedElement = null;
+
+    Anubis.voiceMode = "move";
+    Anubis.voiceMoveBodyId = bodyId;
+
+    Anubis.showVoiceStatus("Назовите код перемещения: 352 или 11/12");
+    await Anubis.startVoice();
+};
+
+Anubis.setSelectedBodyHeightByVoice = async function(){
+    const bodyId = Anubis.getActiveBodyIdForVoice();
+
+    if (!bodyId) {
+        Anubis.showVoiceStatus("Выберите или наведите труп для записи роста", true);
+        return;
+    }
+
+    Anubis.voiceMode = "height";
+    Anubis.voiceHeightBodyId = bodyId;
+
+    Anubis.showVoiceStatus("Назовите рост");
+    await Anubis.startVoice();
+};
+
+Anubis.applyVoiceMoveCode = async function(parsed){
+    const bodyId = Anubis.voiceMoveBodyId;
+
+    if (!bodyId || !parsed) {
+        Anubis.showVoiceStatus("Нет выбранного тела или кода", true);
+        return;
+    }
+
+    const current = await fetch(`/bodies/${bodyId}`);
+    const currentData = await current.json();
+
+    if (!currentData.success) {
+        Anubis.showVoiceStatus(currentData.error || "Тело не найдено", true);
+        return;
+    }
+
+    const b = currentData.body;
+
+    Anubis.rememberPlace(parsed.fridge, parsed.shelf);
+
+    const form = new URLSearchParams();
+    form.append("body_id", b.id);
+    form.append("surname", Anubis.cleanRecognizedText(b.surname || ""));
+    form.append("initials", Anubis.cleanRecognizedText(b.initials || ""));
+    form.append("height", Anubis.cleanNumber(b.height || "") || "0");
+    form.append("comment", Anubis.cleanRecognizedText(b.comment || ""));
+    form.append("flag_marshmallow", b.flag_marshmallow || 0);
+    form.append("flag_blue_face", b.flag_blue_face || 0);
+    form.append("flag_crooked_leg", b.flag_crooked_leg || 0);
+    form.append("fridge", parsed.fridge);
+    form.append("shelf", parsed.shelf);
+    form.append("autopsy", parsed.autopsy);
+
+    const res = await fetch("/save", {
+        method: "POST",
+        body: form
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+        Anubis.showVoiceStatus(data.error || "Ошибка перемещения", true);
+        return;
+    }
+
+    Anubis.voiceMoveBodyId = null;
+
+    Anubis.showVoiceStatus(
+        parsed.fridge === 0
+            ? `Перемещено на пол, статус ${parsed.autopsy}`
+            : `Перемещено: ${parsed.fridge}${parsed.shelf}${parsed.autopsy}`
+    );
+
+    setTimeout(() => location.reload(), 350);
+};
+
+Anubis.applyVoiceHeightCode = async function(parsed){
+    const bodyId = Anubis.voiceHeightBodyId;
+
+    if (!bodyId || !parsed) {
+        Anubis.showVoiceStatus("Нет выбранного тела или роста", true);
+        return;
+    }
+
+    const current = await fetch(`/bodies/${bodyId}`);
+    const currentData = await current.json();
+
+    if (!currentData.success) {
+        Anubis.showVoiceStatus(currentData.error || "Тело не найдено", true);
+        return;
+    }
+
+    const b = currentData.body;
+
+    Anubis.rememberPlace(b.fridge, b.shelf);
+
+    const form = new URLSearchParams();
+    form.append("body_id", b.id);
+    form.append("surname", Anubis.cleanRecognizedText(b.surname || ""));
+    form.append("initials", Anubis.cleanRecognizedText(b.initials || ""));
+    form.append("height", parsed.height);
+    form.append("comment", Anubis.cleanRecognizedText(b.comment || ""));
+    form.append("flag_marshmallow", b.flag_marshmallow || 0);
+    form.append("flag_blue_face", b.flag_blue_face || 0);
+    form.append("flag_crooked_leg", b.flag_crooked_leg || 0);
+    form.append("fridge", b.fridge);
+    form.append("shelf", b.shelf);
+    form.append("autopsy", b.autopsy);
+
+    const res = await fetch("/save", {
+        method: "POST",
+        body: form
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+        Anubis.showVoiceStatus(data.error || "Ошибка записи роста", true);
+        return;
+    }
+
+    Anubis.voiceHeightBodyId = null;
+
+    const heightInput = document.getElementById("height");
+    if (heightInput && Anubis.modalIsOpen() && Anubis.getOpenedBodyId() === Number(bodyId)) {
+        heightInput.value = parsed.height;
+    }
+
+    Anubis.showVoiceStatus(`Рост записан: ${parsed.height}`);
+    setTimeout(() => location.reload(), 350);
+};

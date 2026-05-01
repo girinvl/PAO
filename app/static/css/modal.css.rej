@@ -1,0 +1,129 @@
+--- app/static/css/modal.css	2026-04-27 13:14:24.000000000 +0000
++++ app/static/css/modal.css	1970-01-01 00:00:00.000000000 +0000
+@@ -1,126 +0,0 @@
+-.modal{
+-position:fixed;
+-inset:0;
+-background:rgba(0,0,0,.72);
+-display:flex;
+-justify-content:center;
+-align-items:center;
+-z-index:50;
+-padding:16px;
+-}
+-
+-.hidden{
+-display:none!important;
+-}
+-
+-.modal-card{
+-width:100%;
+-max-width:640px;
+-background:#111416;
+-border:3px solid #a2772d;
+-border-radius:22px;
+-padding:22px;
+-box-shadow:0 0 30px rgba(0,0,0,.65);
+-}
+-
+-.modal-header{
+-display:flex;
+-justify-content:space-between;
+-align-items:center;
+-margin-bottom:18px;
+-}
+-
+-.modal-header h2{
+-font-size:30px;
+-color:#ffd45a;
+-}
+-
+-.modal-symbol{
+-font-size:34px;
+-}
+-
+-.icon-btn{
+-background:none;
+-border:none;
+-font-size:36px;
+-color:#ddd;
+-cursor:pointer;
+-}
+-
+-.field{
+-margin-bottom:16px;
+-}
+-
+-.field label{
+-display:block;
+-font-weight:800;
+-margin-bottom:6px;
+-color:#d5b36c;
+-}
+-
+-.field input,
+-.field textarea,
+-.field select{
+-width:100%;
+-padding:13px;
+-background:#1b2124;
+-border:2px solid #555;
+-border-radius:12px;
+-color:white;
+-font-size:18px;
+-}
+-
+-.status-buttons{
+-display:flex;
+-gap:12px;
+-margin-top:10px;
+-}
+-
+-.status-buttons button{
+-flex:1;
+-padding:12px;
+-background:#222a2e;
+-border:2px solid #666;
+-color:#fff;
+-border-radius:10px;
+-font-weight:800;
+-cursor:pointer;
+-}
+-
+-.modal-actions{
+-display:flex;
+-gap:12px;
+-margin-top:18px;
+-}
+-
+-.modal-actions button{
+-flex:1;
+-padding:14px;
+-font-size:18px;
+-font-weight:900;
+-border:none;
+-border-radius:12px;
+-cursor:pointer;
+-}
+-
+-.save-btn{
+-background:#22c55e;
+-color:white;
+-}
+-
+-.danger{
+-background:#dc2626;
+-color:white;
+-}
+-
+-.modal-actions button:not(.save-btn):not(.danger){
+-background:#374151;
+-color:white;
+-}
+-
+-.help{
+-margin-top:14px;
+-opacity:.65;
+-font-size:13px;
+-line-height:1.5;
+-}

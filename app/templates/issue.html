@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Выдача — Анубис</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="issue-body">
+<div class="issue-page" data-year="{{ year }}" data-month="{{ month }}">
+<header class="issue-header">
+<div>
+<a class="issue-back" href="/">← Главная</a>
+<h1>🚪 Отдел выдачи</h1>
+<p>Слева — полный список тел со значками, справа — календарь и расписание выдачи.</p>
+</div>
+<a class="issue-table-link" href="/table">📋 Таблица</a>
+</header>
+<main class="issue-layout">
+<section class="issue-left-panel">
+<div class="issue-panel-title"><h2>Список тел</h2><span id="issueBodyCount">{{ bodies|length }}</span></div>
+<input id="issueSearch" class="issue-search" placeholder="Поиск по фамилии..." autocomplete="off">
+<div class="issue-body-list" id="issueBodyList">
+{% for b in bodies %}
+<div class="issue-body-card status-{{ b.autopsy }}{% if b.issue_planned_at and b.issue_planned_at.strftime('%Y-%m-%d') == today_str %} issue-today{% endif %}{% if b.issue_reject %} issue-reject{% endif %}" data-body-id="{{ b.id }}" data-surname="{{ b.surname|lower }}" data-name="{{ b.surname }} {{ b.initials }}" data-issue-date="{% if b.issue_planned_at %}{{ b.issue_planned_at.strftime('%Y-%m-%d') }}{% endif %}" data-issue-time="{% if b.issue_planned_at %}{{ b.issue_planned_at.strftime('%H:%M') }}{% endif %}">
+<div class="issue-card-main"><strong>{{ b.surname }}{% if b.initials %} {{ b.initials }}{% endif %}</strong><span>{{ b.fridge }}{{ b.shelf }}{{ b.autopsy }}</span></div>
+<div class="issue-card-meta">{% if b.issue_planned_at %}{{ b.issue_planned_at.strftime('%d.%m %H:%M') }}{% else %}не назначено{% endif %}</div>
+<div class="issue-card-icons">
+{% if b.issue_reject %}
+<span class="flag-reject" title="Отказ">❌</span>
+{% else %}
+{% if b.has_comment %}<span title="Комментарий">🔔</span>{% endif %}
+{% if b.is_duplicate_surname %}<span class="duplicate-warn" title="Похожая фамилия">❗</span>{% endif %}
+{% if b.is_old %}<span title="Старая запись">💩</span>{% endif %}
+{% if b.flag_marshmallow %}<span class="body-flag flag-blink" title="Толстый">🧸</span>{% endif %}
+{% if b.flag_blue_face %}<span class="body-flag flag-blink" title="Синий">🔵</span>{% endif %}
+{% if b.flag_crooked_leg %}<span class="body-flag flag-blink" title="Кривой">🦵</span>{% endif %}
+{% if b.flag_vegetation %}<span class="body-flag flag-blink" title="Растительность">🌿</span>{% endif %}
+{% if b.flag_defects %}<span class="body-flag flag-blink" title="Дефекты">⚠️</span>{% endif %}
+{% if b.issue_clothes %}<span title="Одежда">👕</span>{% endif %}
+{% if b.issue_shave_clean %}<span title="Брить чисто">🪒</span>{% endif %}
+{% if b.issue_beautify or b.issue_beard %}<span title="Облагородить">✨</span>{% endif %}
+{% if b.issue_mustache %}<span title="Усы">〰️</span>{% endif %}
+{% if b.issue_funeral %}<span title="Отпевание">⛪</span>{% endif %}
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+</section>
+<section class="issue-right-panel">
+<div class="issue-calendar" id="issueCalendarView">
+<div class="issue-calendar-head"><button type="button" id="issuePrevMonth">←</button><h2 id="issueMonthTitle">Месяц</h2><button type="button" id="issueNextMonth">→</button></div>
+<div class="issue-weekdays"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+<div class="issue-month-grid" id="issueMonthGrid"></div>
+</div>
+<div class="issue-day hidden" id="issueDayView">
+<div class="issue-day-head"><button type="button" id="issueBackToCalendar">← Календарь</button><h2 id="issueDayTitle">Дата</h2></div>
+<div class="issue-slots" id="issueSlots"></div>
+</div>
+</section>
+</main>
+</div>
+<div id="issueModal" class="issue-modal hidden">
+<div class="issue-modal-card">
+<div class="issue-modal-header"><h2 id="issueModalTitle">Выдача</h2><button type="button" id="issueModalClose">×</button></div>
+<form id="issueForm">
+<input type="hidden" id="issueBodyId">
+<label>Дата выдачи</label><input type="date" id="issueDate">
+<label>Время выдачи</label><select id="issueTime"></select>
+<div class="issue-checks">
+<label><input type="checkbox" id="issueClothes"> <span>👕 Одежда</span></label>
+<label><input type="checkbox" id="issueShaveClean"> <span>🪒 Брить чисто</span></label>
+<label><input type="checkbox" id="issueBeautify"> <span>✨ Облагородить</span></label>
+<label><input type="checkbox" id="issueMustache"> <span>〰️ Усы</span></label>
+<label><input type="checkbox" id="issueFuneral"> <span>⛪ Отпевание</span></label>
+<label><input type="checkbox" id="issueReject"> <span>❌ Отказ</span></label>
+</div>
+<label>Примечание</label>
+<textarea id="issueNote" rows="4" placeholder="Примечание к выдаче"></textarea>
+<div class="issue-modal-actions"><button type="submit" class="issue-save">Сохранить</button><button type="button" id="issueClearPlan">Снять дату/время</button><button type="button" id="issueModalCancel">Отмена</button></div>
+</form>
+<div id="issueMessage"></div>
+</div>
+</div>
+<script src="/static/js/issue.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+.bell{
+display:inline-block;
+margin-left:4px;
+animation:bellBlink 1s infinite;
+}
+
+@keyframes bellBlink{
+50%{
+opacity:.2;
+transform:scale(1.2);
+}
+}
+
+.warn{
+display:inline-block;
+color:#ffd45a;
+font-weight:900;
+margin-left:4px;
+animation:warnBlink .75s infinite;
+}
+
+@keyframes warnBlink{
+0%{
+opacity:1;
+transform:scale(1);
+filter:drop-shadow(0 0 2px #ffd45a);
+}
+
+50%{
+opacity:.2;
+transform:scale(1.28);
+filter:drop-shadow(0 0 8px #ffd45a);
+}
+
+100%{
+opacity:1;
+transform:scale(1);
+}
+}
+
+.poop{
+margin-left:5px;
+animation:bellBlink 1.5s infinite;
+}

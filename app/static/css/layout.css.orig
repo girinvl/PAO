@@ -1,0 +1,61 @@
+
+.body-flag{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin-left:3px;
+font-size:14px;
+filter:drop-shadow(0 0 4px rgba(255,212,90,.75));
+}
+
+.flag-blink{
+animation:anubisFlagBlink 1s infinite;
+}
+
+@keyframes anubisFlagBlink{
+0%,100%{opacity:1;transform:scale(1);}
+50%{opacity:.35;transform:scale(1.18);}
+}
+
+/* Desktop LAN QR panel */
+.desktop-lan-qr{
+margin-top:12px;
+padding:10px;
+background:rgba(255,255,255,.9);
+border:1px solid rgba(127,90,24,.35);
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.12);
+text-align:center;
+}
+
+.desktop-lan-qr-title{
+font-weight:800;
+font-size:13px;
+margin-bottom:8px;
+}
+
+.desktop-lan-qr img{
+width:132px;
+height:132px;
+background:#fff;
+border-radius:8px;
+padding:6px;
+}
+
+.desktop-lan-qr-url{
+margin-top:7px;
+font-size:11px;
+line-height:1.25;
+word-break:break-all;
+}
+
+.desktop-lan-qr-copy{
+margin-top:8px;
+width:100%;
+border:1px solid #7f5a18;
+background:#fff6df;
+border-radius:9px;
+padding:7px 8px;
+font-weight:700;
+cursor:pointer;
+}

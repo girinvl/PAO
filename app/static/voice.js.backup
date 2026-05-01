@@ -1,0 +1,1298 @@
+let nav = {
+    area: "fridge",
+    fridge: 0,
+    shelf: 0,
+    body: 0,
+    mode: "shelf"
+};
+
+let hoveredBodyId = null;
+
+let carriedBodyId = null;
+let carriedElement = null;
+
+let mediaRecorder = null;
+let audioChunks = [];
+let currentStream = null;
+let audioContext = null;
+let analyser = null;
+let sourceNode = null;
+let silenceTimer = null;
+let monitorInterval = null;
+let isRecording = false;
+let voiceMode = "short";
+
+const SILENCE_DURATION_MS = 1800;
+const CHECK_INTERVAL_MS = 200;
+const SILENCE_THRESHOLD = 0.02;
+
+function cleanRecognizedText(v) {
+    return String(v || "")
+        .replace(/[.,;:!?]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function cleanNumber(v) {
+    return String(v || "")
+        .replace(/\D/g, "")
+        .trim();
+}
+
+function saveNavState() {
+    sessionStorage.setItem("anubis_nav", JSON.stringify(nav));
+}
+
+function restoreNavState() {
+    const raw = sessionStorage.getItem("anubis_nav");
+    if (!raw) return false;
+
+    try {
+        const saved = JSON.parse(raw);
+        nav = Object.assign(nav, saved);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+function rememberPlace(fridge, shelf) {
+    if (Number(fridge) === 0 || Number(shelf) === 0) {
+        nav.area = "unknown";
+        nav.mode = "shelf";
+        nav.body = 0;
+    } else {
+        nav.area = "fridge";
+        nav.mode = "shelf";
+        nav.fridge = Number(fridge) - 1;
+        nav.shelf = 5 - Number(shelf);
+        nav.body = 0;
+    }
+
+    saveNavState();
+}
+
+function showVoiceStatus(text, isError = false) {
+    const el = document.getElementById("voiceStatus");
+    if (!el) return;
+
+    el.innerText = text;
+    el.style.display = "block";
+    el.style.background = isError ? "#dc2626" : "#2563eb";
+
+    clearTimeout(el.timer);
+    el.timer = setTimeout(() => {
+        el.style.display = "none";
+    }, 2500);
+}
+
+function modalIsOpen() {
+    return !document.getElementById("modal").classList.contains("hidden");
+}
+
+function isTypingInField() {
+    const el = document.activeElement;
+    if (!el) return false;
+
+    const t = el.tagName.toLowerCase();
+    return t === "input" || t === "textarea" || t === "select";
+}
+
+function getOpenedBodyId() {
+    const id = document.getElementById("body_id")?.value || "0";
+    return Number(id);
+}
+
+function getActiveBodyIdForVoice() {
+    if (modalIsOpen() && getOpenedBodyId() > 0) {
+        return getOpenedBodyId();
+    }
+
+    return hoveredBodyId || getSelectedBodyId();
+}
+
+function shelvesMatrix() {
+    return [...document.querySelectorAll(".fridge")].map(fridge => {
+        return [...fridge.querySelectorAll(".shelf")];
+    });
+}
+
+function unknownZone() {
+    return document.querySelector(".unknown-zone");
+}
+
+function unknownBodies() {
+    return [...document.querySelectorAll(".unknown-zone .body-chip")];
+}
+
+function clearSelection() {
+    document.querySelectorAll(".selected-nav").forEach(x => {
+        x.classList.remove("selected-nav");
+    });
+}
+
+function clearCarryingStyle() {
+    document.querySelectorAll(".carrying").forEach(x => {
+        x.classList.remove("carrying");
+    });
+}
+
+function bodiesOn(fridgeIndex, shelfIndex) {
+    const matrix = shelvesMatrix();
+
+    if (!matrix[fridgeIndex] || !matrix[fridgeIndex][shelfIndex]) {
+        return [];
+    }
+
+    return [...matrix[fridgeIndex][shelfIndex].querySelectorAll(".body-chip")];
+}
+
+function currentShelfElement() {
+    const matrix = shelvesMatrix();
+
+    if (!matrix[nav.fridge]) return null;
+    if (!matrix[nav.fridge][nav.shelf]) return null;
+
+    return matrix[nav.fridge][nav.shelf];
+}
+
+function currentElement() {
+    if (nav.area === "unknown") {
+        const bodies = unknownBodies();
+
+        if (nav.mode === "body" && bodies.length) {
+            if (nav.body >= bodies.length) nav.body = bodies.length - 1;
+            return bodies[nav.body];
+        }
+
+        return unknownZone();
+    }
+
+    const shelf = currentShelfElement();
+    if (!shelf) return null;
+
+    const bodies = bodiesOn(nav.fridge, nav.shelf);
+
+    if (nav.mode === "body" && bodies.length) {
+        if (nav.body >= bodies.length) nav.body = bodies.length - 1;
+        return bodies[nav.body];
+    }
+
+    return shelf;
+}
+
+function paintSelection() {
+    clearSelection();
+
+    const el = currentElement();
+    if (!el) return;
+
+    el.classList.add("selected-nav");
+
+    clearCarryingStyle();
+    if (carriedBodyId && carriedElement) {
+        carriedElement.classList.add("carrying");
+    }
+
+    el.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+        behavior: "smooth"
+    });
+}
+
+function initSelection() {
+    if (!restoreNavState()) {
+        nav.area = "fridge";
+        nav.mode = "shelf";
+        nav.fridge = 0;
+        nav.shelf = 0;
+        nav.body = 0;
+    }
+
+    paintSelection();
+}
+
+function moveLeft() {
+    if (nav.area === "unknown") {
+        nav.area = "fridge";
+        nav.mode = "shelf";
+        nav.fridge = 2;
+        nav.shelf = 4;
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+        return;
+    }
+
+    if (nav.fridge > 0) {
+        nav.fridge--;
+        nav.mode = "shelf";
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+    }
+}
+
+function moveRight() {
+    if (nav.area === "unknown") {
+        return;
+    }
+
+    const maxFridge = shelvesMatrix().length - 1;
+
+    if (nav.fridge < maxFridge) {
+        nav.fridge++;
+        nav.mode = "shelf";
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+    }
+}
+
+function moveUp() {
+    if (nav.area === "unknown") {
+        nav.area = "fridge";
+        nav.mode = "shelf";
+        nav.shelf = 4;
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+        return;
+    }
+
+    if (nav.mode === "body") {
+        if (nav.body > 0) {
+            nav.body--;
+        } else {
+            nav.mode = "shelf";
+            nav.body = 0;
+        }
+
+        paintSelection();
+        saveNavState();
+        return;
+    }
+
+    if (nav.shelf > 0) {
+        nav.shelf--;
+        nav.mode = "shelf";
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+    }
+}
+
+function moveDown() {
+    if (nav.area === "unknown") {
+        const bodies = unknownBodies();
+
+        if (nav.mode === "shelf" && bodies.length) {
+            nav.mode = "body";
+            nav.body = 0;
+            paintSelection();
+            saveNavState();
+            return;
+        }
+
+        if (nav.mode === "body" && nav.body < bodies.length - 1) {
+            nav.body++;
+            paintSelection();
+            saveNavState();
+        }
+
+        return;
+    }
+
+    const bodies = bodiesOn(nav.fridge, nav.shelf);
+
+    if (nav.mode === "shelf" && bodies.length) {
+        nav.mode = "body";
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+        return;
+    }
+
+    if (nav.mode === "body") {
+        if (nav.body < bodies.length - 1) {
+            nav.body++;
+            paintSelection();
+            saveNavState();
+            return;
+        }
+
+        if (nav.shelf < 4) {
+            nav.shelf++;
+            nav.mode = "shelf";
+            nav.body = 0;
+            paintSelection();
+            saveNavState();
+            return;
+        }
+
+        nav.area = "unknown";
+        nav.mode = "shelf";
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+        return;
+    }
+
+    if (nav.shelf < 4) {
+        nav.shelf++;
+        nav.mode = "shelf";
+        nav.body = 0;
+        paintSelection();
+        saveNavState();
+        return;
+    }
+
+    nav.area = "unknown";
+    nav.mode = "shelf";
+    nav.body = 0;
+    paintSelection();
+    saveNavState();
+}
+
+function getSelectedBodyId() {
+    const el = currentElement();
+
+    if (el && el.classList.contains("body-chip")) {
+        return Number(el.dataset.bodyId);
+    }
+
+    return null;
+}
+
+function getSelectedTarget() {
+    if (nav.area === "unknown") {
+        return { fridge: 0, shelf: 0 };
+    }
+
+    const shelf = currentShelfElement();
+
+    if (!shelf) return null;
+
+    return {
+        fridge: Number(shelf.dataset.fridge),
+        shelf: Number(shelf.dataset.shelf)
+    };
+}
+
+async function openCurrent() {
+    const el = currentElement();
+    if (!el) return;
+
+    if (el.classList.contains("body-chip")) {
+        await openEditModal(el.dataset.bodyId);
+        return;
+    }
+
+    if (nav.area === "unknown") {
+        rememberPlace(0, 0);
+        openUnknownModal();
+        return;
+    }
+
+    const shelf = currentShelfElement();
+    rememberPlace(shelf.dataset.fridge, shelf.dataset.shelf);
+    openShelfModal(shelf.dataset.fridge, shelf.dataset.shelf);
+}
+
+async function deleteCurrent() {
+    const el = currentElement();
+
+    if (!el || !el.classList.contains("body-chip")) {
+        showVoiceStatus("Выберите тело", true);
+        return;
+    }
+
+    await deleteBodyById(el.dataset.bodyId);
+}
+
+async function handleSpaceMove() {
+    const el = currentElement();
+
+    if (!carriedBodyId) {
+        if (!el || !el.classList.contains("body-chip")) {
+            showVoiceStatus("Сначала выберите тело", true);
+            return;
+        }
+
+        carriedBodyId = el.dataset.bodyId;
+        carriedElement = el;
+        clearCarryingStyle();
+        el.classList.add("carrying");
+        showVoiceStatus("Тело взято. Выберите место и нажмите Space");
+        return;
+    }
+
+    const target = getSelectedTarget();
+
+    if (!target) {
+        showVoiceStatus("Некуда положить", true);
+        return;
+    }
+
+    rememberPlace(target.fridge, target.shelf);
+
+    const form = new URLSearchParams();
+    form.append("body_id", carriedBodyId);
+    form.append("fridge", target.fridge);
+    form.append("shelf", target.shelf);
+
+    const res = await fetch("/move", {
+        method: "POST",
+        body: form
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+        showVoiceStatus(data.error || "Ошибка перемещения", true);
+        return;
+    }
+
+    carriedBodyId = null;
+    carriedElement = null;
+    showVoiceStatus("Перемещено");
+
+    setTimeout(() => {
+        location.reload();
+    }, 250);
+}
+
+async function moveSelectedBodyByVoice() {
+    const bodyId = getActiveBodyIdForVoice();
+
+    if (!bodyId) {
+        showVoiceStatus("Выберите или наведите труп для голосового перемещения", true);
+        return;
+    }
+
+    carriedBodyId = null;
+    carriedElement = null;
+
+    voiceMode = "move";
+    window.voiceMoveBodyId = bodyId;
+
+    showVoiceStatus("Назовите код перемещения: 352 или 11/12");
+    await startVoice();
+}
+
+async function setSelectedBodyHeightByVoice() {
+    const bodyId = getActiveBodyIdForVoice();
+
+    if (!bodyId) {
+        showVoiceStatus("Выберите или наведите труп для записи роста", true);
+        return;
+    }
+
+    voiceMode = "height";
+    window.voiceHeightBodyId = bodyId;
+
+    showVoiceStatus("Назовите рост");
+    await startVoice();
+}
+
+async function applyVoiceMoveCode(parsed) {
+    const bodyId = window.voiceMoveBodyId;
+
+    if (!bodyId || !parsed) {
+        showVoiceStatus("Нет выбранного тела или кода", true);
+        return;
+    }
+
+    const current = await fetch(`/bodies/${bodyId}`);
+    const currentData = await current.json();
+
+    if (!currentData.success) {
+        showVoiceStatus(currentData.error || "Тело не найдено", true);
+        return;
+    }
+
+    const b = currentData.body;
+
+    rememberPlace(parsed.fridge, parsed.shelf);
+
+    const form = new URLSearchParams();
+    form.append("body_id", b.id);
+    form.append("surname", cleanRecognizedText(b.surname || ""));
+    form.append("initials", cleanRecognizedText(b.initials || ""));
+    form.append("height", cleanNumber(b.height || "") || "0");
+    form.append("comment", cleanRecognizedText(b.comment || ""));
+    form.append("fridge", parsed.fridge);
+    form.append("shelf", parsed.shelf);
+    form.append("autopsy", parsed.autopsy);
+
+    const res = await fetch("/save", {
+        method: "POST",
+        body: form
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+        showVoiceStatus(data.error || "Ошибка перемещения", true);
+        return;
+    }
+
+    window.voiceMoveBodyId = null;
+
+    if (parsed.fridge === 0) {
+        showVoiceStatus(`Перемещено на пол, статус ${parsed.autopsy}`);
+    } else {
+        showVoiceStatus(`Перемещено: ${parsed.fridge}${parsed.shelf}${parsed.autopsy}`);
+    }
+
+    setTimeout(() => {
+        location.reload();
+    }, 350);
+}
+
+async function applyVoiceHeightCode(parsed) {
+    const bodyId = window.voiceHeightBodyId;
+
+    if (!bodyId || !parsed) {
+        showVoiceStatus("Нет выбранного тела или роста", true);
+        return;
+    }
+
+    const current = await fetch(`/bodies/${bodyId}`);
+    const currentData = await current.json();
+
+    if (!currentData.success) {
+        showVoiceStatus(currentData.error || "Тело не найдено", true);
+        return;
+    }
+
+    const b = currentData.body;
+
+    rememberPlace(b.fridge, b.shelf);
+
+    const form = new URLSearchParams();
+    form.append("body_id", b.id);
+    form.append("surname", cleanRecognizedText(b.surname || ""));
+    form.append("initials", cleanRecognizedText(b.initials || ""));
+    form.append("height", parsed.height);
+    form.append("comment", cleanRecognizedText(b.comment || ""));
+    form.append("fridge", b.fridge);
+    form.append("shelf", b.shelf);
+    form.append("autopsy", b.autopsy);
+
+    const res = await fetch("/save", {
+        method: "POST",
+        body: form
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+        showVoiceStatus(data.error || "Ошибка записи роста", true);
+        return;
+    }
+
+    window.voiceHeightBodyId = null;
+
+    const heightInput = document.getElementById("height");
+    if (heightInput && modalIsOpen() && getOpenedBodyId() === Number(bodyId)) {
+        heightInput.value = parsed.height;
+    }
+
+    showVoiceStatus(`Рост записан: ${parsed.height}`);
+
+    setTimeout(() => {
+        location.reload();
+    }, 350);
+}
+
+function setModalStatus(v) {
+    document.getElementById("autopsy").value = String(v);
+    showVoiceStatus(v === 2 ? "Вскрыт" : "Не вскрыт");
+}
+
+function openShelfModal(fridge, shelf) {
+    rememberPlace(fridge, shelf);
+
+    document.getElementById("modalTitle").innerText = `Холодильник ${fridge}, полка ${shelf}`;
+
+    document.getElementById("body_id").value = "0";
+    document.getElementById("surname").value = "";
+    document.getElementById("initials").value = "";
+    document.getElementById("height").value = "";
+    document.getElementById("comment").value = "";
+    document.getElementById("fridge").value = String(fridge);
+    document.getElementById("shelf").value = String(shelf);
+    document.getElementById("autopsy").value = "1";
+
+    document.getElementById("modal").classList.remove("hidden");
+
+    voiceMode = "short";
+    setTimeout(() => {
+        startVoice();
+    }, 300);
+}
+
+function openUnknownModal() {
+    rememberPlace(0, 0);
+
+    document.getElementById("modalTitle").innerText = "Без места / на полу";
+
+    document.getElementById("body_id").value = "0";
+    document.getElementById("surname").value = "";
+    document.getElementById("initials").value = "";
+    document.getElementById("height").value = "";
+    document.getElementById("comment").value = "";
+    document.getElementById("fridge").value = "0";
+    document.getElementById("shelf").value = "0";
+    document.getElementById("autopsy").value = "1";
+
+    document.getElementById("modal").classList.remove("hidden");
+
+    voiceMode = "short";
+    setTimeout(() => {
+        startVoice();
+    }, 300);
+}
+
+async function openEditModal(id) {
+    await stopVoiceRecording(true);
+
+    const r = await fetch("/bodies/" + id);
+    const d = await r.json();
+
+    if (!d.success) {
+        showVoiceStatus(d.error || "Ошибка открытия", true);
+        return;
+    }
+
+    const b = d.body;
+
+    rememberPlace(b.fridge, b.shelf);
+
+    document.getElementById("modalTitle").innerText = "Редактирование";
+    document.getElementById("body_id").value = String(b.id);
+    document.getElementById("surname").value = cleanRecognizedText(b.surname || "");
+    document.getElementById("initials").value = cleanRecognizedText(b.initials || "");
+    document.getElementById("height").value = cleanNumber(b.height || "");
+    document.getElementById("comment").value = cleanRecognizedText(b.comment || "");
+    document.getElementById("fridge").value = String(b.fridge);
+    document.getElementById("shelf").value = String(b.shelf);
+    document.getElementById("autopsy").value = String(b.autopsy);
+
+    document.getElementById("modal").classList.remove("hidden");
+}
+
+function closeShelfModal() {
+    document.getElementById("modal").classList.add("hidden");
+    stopVoiceRecording(true);
+    paintSelection();
+}
+
+async function saveBody(e) {
+    if (e) e.preventDefault();
+
+    const surname = cleanRecognizedText(document.getElementById("surname").value);
+    const initials = cleanRecognizedText(document.getElementById("initials").value);
+    const height = cleanNumber(document.getElementById("height").value) || "0";
+    const comment = cleanRecognizedText(document.getElementById("comment").value);
+    const fridge = document.getElementById("fridge").value;
+    const shelf = document.getElementById("shelf").value;
+
+    if (!surname) {
+        showVoiceStatus("Нет фамилии", true);
+        document.getElementById("surname").focus();
+        return;
+    }
+
+    rememberPlace(fridge, shelf);
+
+    const form = new URLSearchParams();
+    form.append("body_id", document.getElementById("body_id").value || "0");
+    form.append("surname", surname);
+    form.append("initials", initials);
+    form.append("height", height);
+    form.append("comment", comment);
+    form.append("fridge", fridge);
+    form.append("shelf", shelf);
+    form.append("autopsy", document.getElementById("autopsy").value);
+
+    const r = await fetch("/save", {
+        method: "POST",
+        body: form
+    });
+
+    const j = await r.json();
+
+    if (!r.ok || !j.success) {
+        showVoiceStatus(j.error || "Ошибка сохранения", true);
+        return;
+    }
+
+    showVoiceStatus("Сохранено");
+
+    setTimeout(() => {
+        location.reload();
+    }, 300);
+}
+
+async function deleteBody() {
+    const id = document.getElementById("body_id").value;
+
+    if (id === "0") {
+        showVoiceStatus("Это новая запись", true);
+        return;
+    }
+
+    await deleteBodyById(id);
+}
+
+async function deleteBodyById(id) {
+    const form = new URLSearchParams();
+    form.append("body_id", id);
+
+    const r = await fetch("/delete", {
+        method: "POST",
+        body: form
+    });
+
+    const j = await r.json();
+
+    if (!j.success) {
+        showVoiceStatus(j.error || "Ошибка выдачи", true);
+        return;
+    }
+
+    showVoiceStatus("Выдано");
+
+    setTimeout(() => {
+        location.reload();
+    }, 250);
+}
+
+async function setBodyAutopsy(bodyId, status) {
+    const r = await fetch(`/bodies/${bodyId}`);
+    const d = await r.json();
+
+    if (!d.success) {
+        showVoiceStatus(d.error || "Ошибка открытия", true);
+        return;
+    }
+
+    const b = d.body;
+    rememberPlace(b.fridge, b.shelf);
+
+    const form = new URLSearchParams();
+
+    form.append("body_id", b.id);
+    form.append("surname", cleanRecognizedText(b.surname || ""));
+    form.append("initials", cleanRecognizedText(b.initials || ""));
+    form.append("height", cleanNumber(b.height || "") || "0");
+    form.append("comment", cleanRecognizedText(b.comment || ""));
+    form.append("fridge", b.fridge);
+    form.append("shelf", b.shelf);
+    form.append("autopsy", status);
+
+    const sr = await fetch("/save", {
+        method: "POST",
+        body: form
+    });
+
+    const sj = await sr.json();
+
+    if (!sj.success) {
+        showVoiceStatus(sj.error || "Ошибка статуса", true);
+        return;
+    }
+
+    showVoiceStatus(status === 2 ? "Статус: вскрыт" : "Статус: не вскрыт");
+
+    setTimeout(() => {
+        location.reload();
+    }, 250);
+}
+
+async function changeStatusHotkey(status) {
+    if (modalIsOpen()) {
+        if (isTypingInField()) return;
+        setModalStatus(status);
+        return;
+    }
+
+    const targetId = hoveredBodyId || getSelectedBodyId();
+
+    if (!targetId) {
+        showVoiceStatus("Наведите или выберите тело", true);
+        return;
+    }
+
+    await setBodyAutopsy(targetId, status);
+}
+
+function fillShortFormFromParsed(parsed) {
+    if (!parsed) return;
+
+    document.getElementById("surname").value = cleanRecognizedText(parsed.surname || "");
+    document.getElementById("initials").value = cleanRecognizedText(parsed.initials || "");
+    document.getElementById("height").value = cleanNumber(parsed.height || "");
+}
+
+function stopStreamTracks() {
+    if (currentStream) {
+        currentStream.getTracks().forEach(t => {
+            t.stop();
+        });
+
+        currentStream = null;
+    }
+}
+
+function cleanupAudio() {
+    if (monitorInterval) clearInterval(monitorInterval);
+    if (silenceTimer) clearTimeout(silenceTimer);
+
+    if (sourceNode) {
+        try {
+            sourceNode.disconnect();
+        } catch (e) {}
+        sourceNode = null;
+    }
+
+    if (audioContext) {
+        try {
+            audioContext.close();
+        } catch (e) {}
+    }
+
+    monitorInterval = null;
+    silenceTimer = null;
+    audioContext = null;
+    analyser = null;
+}
+
+function getAverageVolume() {
+    if (!analyser) return 0;
+
+    const buffer = new Uint8Array(analyser.fftSize);
+    analyser.getByteTimeDomainData(buffer);
+
+    let sum = 0;
+
+    for (let i = 0; i < buffer.length; i++) {
+        const n = (buffer[i] - 128) / 128;
+        sum += n * n;
+    }
+
+    return Math.sqrt(sum / buffer.length);
+}
+
+function armSilence() {
+    if (silenceTimer) return;
+
+    silenceTimer = setTimeout(() => {
+        stopVoiceRecording(false);
+    }, SILENCE_DURATION_MS);
+}
+
+function disarmSilence() {
+    if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+    }
+}
+
+function startMonitoring(stream) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+
+    sourceNode = audioContext.createMediaStreamSource(stream);
+    sourceNode.connect(analyser);
+
+    monitorInterval = setInterval(() => {
+        const vol = getAverageVolume();
+
+        if (vol < SILENCE_THRESHOLD) {
+            armSilence();
+        } else {
+            disarmSilence();
+        }
+    }, CHECK_INTERVAL_MS);
+}
+
+async function sendAudioForShort(blob) {
+    const fd = new FormData();
+    fd.append("audio", blob, "voice.webm");
+
+    showVoiceStatus("Распознавание...");
+
+    let endpoint = "/stt-short";
+
+    if (voiceMode === "move") {
+        endpoint = "/stt-move-code";
+    }
+
+    if (voiceMode === "height") {
+        endpoint = "/stt-height-code";
+    }
+
+    const r = await fetch(endpoint, {
+        method: "POST",
+        body: fd
+    });
+
+    const data = await r.json();
+
+    if (!data.success) {
+        showVoiceStatus(data.error || "Не распознано", true);
+        voiceMode = "short";
+        window.voiceMoveBodyId = null;
+        window.voiceHeightBodyId = null;
+        return;
+    }
+
+    if (voiceMode === "move") {
+        await applyVoiceMoveCode(data.parsed);
+        voiceMode = "short";
+        return;
+    }
+
+    if (voiceMode === "height") {
+        await applyVoiceHeightCode(data.parsed);
+        voiceMode = "short";
+        return;
+    }
+
+    fillShortFormFromParsed(data.parsed);
+    showVoiceStatus(`Заполнено: ${cleanRecognizedText(data.text || "")}`);
+}
+
+async function stopVoiceRecording(cancel = false) {
+    if (!isRecording || !mediaRecorder) return;
+
+    isRecording = false;
+    cleanupAudio();
+
+    await new Promise(resolve => {
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(audioChunks, {
+                type: "audio/webm"
+            });
+
+            stopStreamTracks();
+
+            if (!cancel) {
+                await sendAudioForShort(blob);
+            }
+
+            audioChunks = [];
+            mediaRecorder = null;
+
+            resolve();
+        };
+
+        mediaRecorder.stop();
+    });
+}
+
+async function startVoice() {
+    if (isRecording) return;
+
+    try {
+        currentStream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        audioChunks = [];
+
+        const preferred = [
+            "audio/webm;codecs=opus",
+            "audio/webm",
+            "audio/mp4"
+        ];
+
+        let mimeType = "";
+
+        for (const t of preferred) {
+            if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) {
+                mimeType = t;
+                break;
+            }
+        }
+
+        mediaRecorder = mimeType
+            ? new MediaRecorder(currentStream, {
+                mimeType
+            })
+            : new MediaRecorder(currentStream);
+
+        mediaRecorder.ondataavailable = e => {
+            if (e.data && e.data.size > 0) {
+                audioChunks.push(e.data);
+            }
+        };
+
+        isRecording = true;
+        startMonitoring(currentStream);
+
+        showVoiceStatus("Идет запись...");
+        mediaRecorder.start();
+
+    } catch (err) {
+        showVoiceStatus("Ошибка микрофона: " + err.message, true);
+        stopStreamTracks();
+        cleanupAudio();
+        isRecording = false;
+    }
+}
+
+/* drag and drop */
+
+let dragState = {
+    active: false,
+    moved: false,
+    bodyId: null,
+    startX: 0,
+    startY: 0,
+    ghost: null,
+    sourceEl: null
+};
+
+function createDragGhost(el, x, y) {
+    const ghost = document.createElement("div");
+    ghost.className = "drag-ghost";
+    ghost.innerText = el.innerText.trim();
+    document.body.appendChild(ghost);
+    moveDragGhost(ghost, x, y);
+    return ghost;
+}
+
+function moveDragGhost(ghost, x, y) {
+    ghost.style.left = `${x + 12}px`;
+    ghost.style.top = `${y + 12}px`;
+}
+
+function findDropTarget(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+
+    const shelf = el.closest(".shelf");
+    if (shelf) {
+        return {
+            fridge: Number(shelf.dataset.fridge),
+            shelf: Number(shelf.dataset.shelf)
+        };
+    }
+
+    const unknown = el.closest(".unknown-zone");
+    if (unknown) {
+        return {
+            fridge: 0,
+            shelf: 0
+        };
+    }
+
+    return null;
+}
+
+async function moveBodyByDrag(bodyId, target) {
+    rememberPlace(target.fridge, target.shelf);
+
+    const form = new URLSearchParams();
+    form.append("body_id", bodyId);
+    form.append("fridge", target.fridge);
+    form.append("shelf", target.shelf);
+
+    const res = await fetch("/move", {
+        method: "POST",
+        body: form
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+        showVoiceStatus(data.error || "Ошибка перемещения", true);
+        return;
+    }
+
+    showVoiceStatus("Перемещено");
+    setTimeout(() => location.reload(), 250);
+}
+
+document.addEventListener("pointerdown", function(e) {
+    if (modalIsOpen()) return;
+
+    const chip = e.target.closest(".body-chip");
+    if (!chip) return;
+
+    dragState.active = true;
+    dragState.moved = false;
+    dragState.bodyId = chip.dataset.bodyId;
+    dragState.startX = e.clientX;
+    dragState.startY = e.clientY;
+    dragState.sourceEl = chip;
+    dragState.ghost = null;
+
+    chip.setPointerCapture?.(e.pointerId);
+});
+
+document.addEventListener("pointermove", function(e) {
+    if (!dragState.active) return;
+
+    const dx = Math.abs(e.clientX - dragState.startX);
+    const dy = Math.abs(e.clientY - dragState.startY);
+
+    if (!dragState.moved && (dx > 8 || dy > 8)) {
+        dragState.moved = true;
+        dragState.sourceEl.classList.add("dragging");
+        dragState.ghost = createDragGhost(
+            dragState.sourceEl,
+            e.clientX,
+            e.clientY
+        );
+    }
+
+    if (dragState.ghost) {
+        moveDragGhost(dragState.ghost, e.clientX, e.clientY);
+    }
+});
+
+document.addEventListener("pointerup", async function(e) {
+    if (!dragState.active) return;
+
+    const wasMoved = dragState.moved;
+    const bodyId = dragState.bodyId;
+
+    if (dragState.sourceEl) {
+        dragState.sourceEl.classList.remove("dragging");
+    }
+
+    if (dragState.ghost) {
+        dragState.ghost.remove();
+    }
+
+    dragState.active = false;
+    dragState.moved = false;
+    dragState.bodyId = null;
+    dragState.ghost = null;
+    dragState.sourceEl = null;
+
+    if (!wasMoved) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = findDropTarget(e.clientX, e.clientY);
+
+    if (!target) {
+        showVoiceStatus("Не выбрано место", true);
+        return;
+    }
+
+    await moveBodyByDrag(bodyId, target);
+}, true);
+
+document.addEventListener("click", function(e) {
+    if (dragState.moved) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}, true);
+
+/* keyboard */
+
+document.addEventListener("keydown", async function(e) {
+    if (e.key === "v" || e.key === "V" || e.key === "м" || e.key === "М") {
+        if (!isTypingInField()) {
+            e.preventDefault();
+            await moveSelectedBodyByVoice();
+        }
+        return;
+    }
+
+    if (e.key === "l" || e.key === "L" || e.key === "д" || e.key === "Д") {
+        if (!isTypingInField()) {
+            e.preventDefault();
+            await setSelectedBodyHeightByVoice();
+        }
+        return;
+    }
+
+    if (e.code === "Space") {
+        if (!isTypingInField()) {
+            e.preventDefault();
+            await handleSpaceMove();
+        }
+        return;
+    }
+
+    if (e.key === "1") {
+        if (!isTypingInField()) {
+            e.preventDefault();
+            await changeStatusHotkey(1);
+        }
+        return;
+    }
+
+    if (e.key === "2") {
+        if (!isTypingInField()) {
+            e.preventDefault();
+            await changeStatusHotkey(2);
+        }
+        return;
+    }
+
+    if (modalIsOpen()) {
+        if (e.key === "Escape") {
+            e.preventDefault();
+            closeShelfModal();
+            return;
+        }
+
+        if (e.key === "Enter") {
+            e.preventDefault();
+            await saveBody();
+            return;
+        }
+
+        return;
+    }
+
+    if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        moveLeft();
+        return;
+    }
+
+    if (e.key === "ArrowRight") {
+        e.preventDefault();
+        moveRight();
+        return;
+    }
+
+    if (e.key === "ArrowUp") {
+        e.preventDefault();
+        moveUp();
+        return;
+    }
+
+    if (e.key === "ArrowDown") {
+        e.preventDefault();
+        moveDown();
+        return;
+    }
+
+    if (e.key === "Enter") {
+        e.preventDefault();
+        await openCurrent();
+        return;
+    }
+
+    if (e.key === "Delete") {
+        e.preventDefault();
+        await deleteCurrent();
+    }
+});
+
+window.addEventListener("load", initSelection);

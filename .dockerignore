@@ -1,0 +1,10 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+*.log
+.venv
+.venv_wheelhouse
+.venv_wheelhouse_verify
+venv
+node_modules

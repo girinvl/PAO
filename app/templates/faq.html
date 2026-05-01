@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FAQ — Анубис</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.faq-page{
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 18px 60px;
+    color:#f4d98b;
+}
+.faq-hero{
+    border:1px solid #8b6a25;
+    border-radius:22px;
+    padding:22px;
+    background:rgba(8,12,14,.88);
+    box-shadow:0 0 28px rgba(0,0,0,.35);
+    margin-bottom:18px;
+}
+.faq-hero h1{
+    margin:0 0 8px;
+    color:#ffd45a;
+    font-size:38px;
+}
+.faq-hero p{
+    margin:0;
+    color:#d8c389;
+}
+.faq-tabs{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:16px 0;
+}
+.faq-tab{
+    border:1px solid #8b6a25;
+    background:#111719;
+    color:#ffd45a;
+    border-radius:14px;
+    padding:12px 16px;
+    cursor:pointer;
+    font-weight:900;
+}
+.faq-tab.active{
+    background:#2a210d;
+    box-shadow:0 0 0 2px rgba(255,212,90,.18) inset;
+}
+.faq-section{
+    display:none;
+}
+.faq-section.active{
+    display:block;
+}
+.faq-card{
+    border:1px solid #31485f;
+    background:rgba(8,13,16,.88);
+    border-radius:18px;
+    padding:18px;
+    margin:12px 0;
+}
+.faq-card h2{
+    color:#ffd45a;
+    margin:0 0 12px;
+    font-size:26px;
+}
+.faq-card h3{
+    color:#fff0bd;
+    margin:16px 0 8px;
+}
+.faq-card p,
+.faq-card li{
+    color:#ead99e;
+    line-height:1.45;
+}
+.faq-card ul,
+.faq-card ol{
+    padding-left:24px;
+}
+.faq-kbd{
+    display:inline-block;
+    min-width:28px;
+    text-align:center;
+    padding:3px 8px;
+    margin:1px;
+    border:1px solid #8b6a25;
+    border-radius:8px;
+    background:#050708;
+    color:#ffd45a;
+    font-weight:900;
+}
+.faq-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+.faq-mini{
+    border:1px solid rgba(139,106,37,.75);
+    border-radius:14px;
+    padding:12px;
+    background:#101719;
+}
+.faq-back{
+    display:inline-block;
+    margin-bottom:14px;
+    color:#ffd45a;
+    text-decoration:none;
+    border:1px solid #8b6a25;
+    border-radius:12px;
+    padding:10px 14px;
+    background:#111719;
+    font-weight:900;
+}
+@media(max-width:700px){
+    .faq-page{padding:14px 10px 34px;}
+    .faq-hero h1{font-size:29px;}
+    .faq-grid{grid-template-columns:1fr;}
+    .faq-tab{flex:1; min-width:140px;}
+    .faq-card{padding:14px;}
+}
+</style>
+</head>
+<body>
+<div class="faq-page">
+    <a class="faq-back" href="/">← Вернуться в Анубис</a>
+
+    <section class="faq-hero">
+        <h1>☥ FAQ Анубис</h1>
+        <p>Краткая инструкция отдельно для десктопа и мобильных устройств.</p>
+    </section>
+
+    <div class="faq-tabs">
+        <button class="faq-tab active" type="button" data-tab="desktop">💻 Десктоп</button>
+        <button class="faq-tab" type="button" data-tab="mobile">📱 Мобильная версия</button>
+        <button class="faq-tab" type="button" data-tab="quick">⚡ Памятка</button>
+    </div>
+
+    <section id="desktop" class="faq-section active">
+        <div class="faq-card">
+            <h2>💻 Десктопная версия</h2>
+
+            <h3>Навигация</h3>
+            <p>
+                <span class="faq-kbd">←</span><span class="faq-kbd">→</span> — холодильники,
+                <span class="faq-kbd">↑</span><span class="faq-kbd">↓</span> — полки и тела,
+                <span class="faq-kbd">Enter</span> — открыть,
+                <span class="faq-kbd">Space</span> — взять / положить тело.
+            </p>
+
+            <h3>Работа с телами</h3>
+            <ul>
+                <li>Клик по пустой полке — создать запись.</li>
+                <li>Клик по телу — открыть редактирование.</li>
+                <li>Drag & Drop мышью — перенести тело на другую полку.</li>
+                <li>Через клавиатуру: выделить тело → Space → перейти на полку → Space.</li>
+            </ul>
+
+            <h3>Горячие клавиши</h3>
+            <p>
+                <span class="faq-kbd">1</span> не вскрыт,
+                <span class="faq-kbd">2</span> вскрыт,
+                <span class="faq-kbd">V</span> голосовой код,
+                <span class="faq-kbd">L</span> голосовой рост,
+                <span class="faq-kbd">Esc</span> закрыть форму.
+            </p>
+            <p>Горячие клавиши действуют на тело в рамке выделения.</p>
+        </div>
+
+        <div class="faq-card">
+            <h2>Значки и статусы</h2>
+            <div class="faq-grid">
+                <div class="faq-mini">🧸 Толстый — специальная пометка, выводится рядом с ростом.</div>
+                <div class="faq-mini">🔵 Синий — специальная пометка.</div>
+                <div class="faq-mini">🦵 Кривой — специальная пометка.</div>
+                <div class="faq-mini">🌿 Растительность — специальная пометка.</div>
+                <div class="faq-mini">⚠️ Дефекты — специальная пометка.</div>
+                <div class="faq-mini">🔔 Есть комментарий.</div>
+                <div class="faq-mini">❗ Дубликат фамилии.</div>
+                <div class="faq-mini">💩 Старая запись / требует внимания.</div>
+            </div>
+        </div>
+
+        <div class="faq-card">
+            <h2>Без места / на полу</h2>
+            <p>Используется для тел без размещения, временно находящихся на полу или ожидающих свободную полку.</p>
+        </div>
+    </section>
+
+    <section id="mobile" class="faq-section">
+        <div class="faq-card">
+            <h2>📱 Мобильная версия</h2>
+
+            <h3>Основные действия</h3>
+            <ul>
+                <li><b>☰</b> — открыть меню.</li>
+                <li><b>Тап по телу</b> — открыть карточку.</li>
+                <li><b>Тап по пустой полке</b> — создать запись.</li>
+                <li><b>Двойной тап по телу</b> — сменить статус вскрытия.</li>
+                <li><b>Долгое удержание</b> — начать перенос тела.</li>
+            </ul>
+
+            <h3>Перенос и прокрутка</h3>
+            <ol>
+                <li>Зажмите тело долгим удержанием.</li>
+                <li>Перетащите его к нужной полке.</li>
+                <li>Если полка ниже или выше — подведите палец к краю экрана.</li>
+                <li>Страница начнёт прокручиваться автоматически.</li>
+                <li>Отпустите тело над нужной полкой.</li>
+            </ol>
+        </div>
+
+        <div class="faq-card">
+            <h2>Форма на телефоне</h2>
+            <ul>
+                <li>Голосовая запись не запускается сама — нажмите кнопку <b>🎤 Запись</b>.</li>
+                <li>У каждого поля есть <b>×</b> для быстрой очистки.</li>
+                <li>Инициалы автоматически становятся большими буквами.</li>
+                <li>Фамилия автоматически начинается с большой буквы.</li>
+                <li>Пометки 🧸 🔵 🦵 🌿 ⚠️ включаются прямо в форме.</li>
+            </ul>
+        </div>
+
+        <div class="faq-card">
+            <h2>Если неудобно в перчатках</h2>
+            <p>Используйте длинное удержание вместо быстрых жестов. Если перенос начался случайно — отпустите палец и повторите удержание.</p>
+        </div>
+    </section>
+
+    <section id="quick" class="faq-section">
+        <div class="faq-card">
+            <h2>⚡ Быстрая памятка</h2>
+            <div class="faq-grid">
+                <div class="faq-mini">
+                    <h3>Десктоп</h3>
+                    <p>←/→ холодильники<br>↑/↓ навигация<br>Enter открыть<br>Space перенос<br>1/2 статус<br>V код<br>L рост</p>
+                </div>
+                <div class="faq-mini">
+                    <h3>Мобильный</h3>
+                    <p>Тап открыть<br>Двойной тап статус<br>Удержание перенос<br>Край экрана автоскролл<br>☰ меню<br>🎤 голос</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-card">
+            <h2>Если что-то зависло</h2>
+            <p>Сначала обновите страницу. Если не помогло — перезапустите контейнер:</p>
+            <p><span class="faq-kbd">docker compose restart</span></p>
+        </div>
+    </section>
+</div>
+
+<script>
+document.querySelectorAll('.faq-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        const id = btn.dataset.tab;
+        document.querySelectorAll('.faq-tab').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.faq-section').forEach(s=>s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(id).classList.add('active');
+    });
+});
+</script>
+</body>
+</html>

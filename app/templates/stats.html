@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Анубис — графики</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="table-page">
+
+<header class="table-header">
+    <h1>Анубис</h1>
+    <a href="/" class="table-link">← Главная</a>
+    <a href="/table" class="table-link">Таблица</a>
+    <a href="/faq" class="table-link">FAQ</a>
+</header>
+
+<section class="table-panel">
+
+<h2>Статистика поступлений</h2>
+
+<div class="stats-cards">
+    <div class="stat-card">
+        <div class="stat-value">{{ week_total }}</div>
+        <div class="stat-label">за неделю</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-value">{{ month_total }}</div>
+        <div class="stat-label">за месяц</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-value">{{ year_total }}</div>
+        <div class="stat-label">за год</div>
+    </div>
+</div>
+
+<h3>Последние 7 дней</h3>
+
+<div class="bar-chart">
+{% for d in days %}
+    <div class="bar-item">
+        <div class="bar-value">{{ d.count }}</div>
+        <div class="bar" style="height: {{ (d.count / max_day * 180)|int }}px;"></div>
+        <div class="bar-label">{{ d.label }}</div>
+    </div>
+{% endfor %}
+</div>
+
+<h3>По месяцам текущего года</h3>
+
+<div class="bar-chart months-chart">
+{% for m in months %}
+    <div class="bar-item">
+        <div class="bar-value">{{ m.count }}</div>
+        <div class="bar" style="height: {{ (m.count / max_month * 180)|int }}px;"></div>
+        <div class="bar-label">{{ m.label }}</div>
+    </div>
+{% endfor %}
+</div>
+
+</section>
+
+<script src="/static/js/state.js"></script>
+<script src="/static/js/sync.js"></script>
+</body>
+</html>

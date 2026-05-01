@@ -1,0 +1,4 @@
+/*
+This file is intentionally small.
+Scripts are loaded separately from templates to keep debugging easy.
+*/

@@ -1,0 +1,16 @@
+services:
+  morgue:
+    build: .
+    network_mode: "host"
+    ports:
+      - "8443:8443"
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+      - ./certs:/app/certs
+    environment:
+      # HTTPS работает без глобального интернета: сертификат создаётся локально.
+      # Если заходите с другого устройства по IP, впишите IP компьютера с Анубисом:
+      # ANUBIS_HTTPS_IPS: "192.168.1.10"
+      ANUBIS_HTTPS_ENABLED: "1"
+      ANUBIS_HTTPS_PORT: "8443"
