@@ -16,7 +16,7 @@ _active_websockets: Set[WebSocket] = set()
 _sync_counter = 0
 
 _body_locks = {}
-_LOCK_TTL_SECONDS = 90
+_LOCK_TTL_SECONDS = 20
 
 
 def _cleanup_locks():

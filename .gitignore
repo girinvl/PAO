@@ -57,3 +57,10 @@ certs/
 *.key
 *.pem
 *.crt
+
+# heavy/offline artifacts - keep outside git
+python_3.12_slim.tar
+*.tar
+.venv_wheelhouse_verify/
+.venv_wheelhouse/
+wheels/

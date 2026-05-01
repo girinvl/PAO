@@ -518,6 +518,8 @@ document.addEventListener("mouseleave", function(e){
 }, true);
 
 
+
+
 // === Smooth horizontal scroll for shelves and floor ===
 Anubis.edgeScrollTimers = Anubis.edgeScrollTimers || new WeakMap();
 
@@ -583,12 +585,16 @@ Anubis.startSmoothEdgeScroll = function(edge){
 
     let raf = null;
     let last = performance.now();
+    let velocity = 0;
+
+    const targetVelocity = shelf ? 0.62 : 0.42;
 
     const step = (now) => {
         const dt = Math.min(32, now - last);
         last = now;
 
-        scroller.scrollLeft += dir * dt * 0.42;
+        velocity += (targetVelocity - velocity) * 0.18;
+        scroller.scrollLeft += dir * dt * velocity;
 
         raf = requestAnimationFrame(step);
         Anubis.edgeScrollTimers.set(edge, raf);
@@ -618,3 +624,370 @@ document.addEventListener("mouseleave", function(e){
 
 window.addEventListener("load", Anubis.ensureShelfAndFloorScrollState);
 setTimeout(Anubis.ensureShelfAndFloorScrollState, 300);
+
+
+// === Hotkey F: поиск похожих фамилий ===
+Anubis.normalizeFindSurname = function(value){
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/ё/g, "е")
+        .replace(/[^а-яa-z]/g, "");
+};
+
+Anubis.similarityRatio = function(a, b){
+    a = Anubis.normalizeFindSurname(a);
+    b = Anubis.normalizeFindSurname(b);
+
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({length:m+1}, () => new Array(n+1).fill(0));
+
+    for (let i=1;i<=m;i++){
+        for (let j=1;j<=n;j++){
+            dp[i][j] = a[i-1] === b[j-1]
+                ? dp[i-1][j-1] + 1
+                : Math.max(dp[i-1][j], dp[i][j-1]);
+        }
+    }
+
+    return (2 * dp[m][n]) / (m + n);
+};
+
+Anubis.cardSurnameForFind = function(card){
+    if (!card) return "";
+
+    if (card.dataset && card.dataset.surname) {
+        return Anubis.normalizeFindSurname(card.dataset.surname);
+    }
+
+    const nameEl = card.querySelector(".body-name, strong");
+    const text = nameEl ? nameEl.textContent : card.textContent;
+    return Anubis.normalizeFindSurname(String(text || "").split(/\s+/)[0]);
+};
+
+Anubis.clearFindBlink = function(){
+    document.querySelectorAll(".find-blink").forEach(el => el.classList.remove("find-blink"));
+    document.body.classList.remove("find-mode");
+    if (Anubis.findBlinkTimer) {
+        clearTimeout(Anubis.findBlinkTimer);
+        Anubis.findBlinkTimer = null;
+    }
+};
+
+Anubis.runSurnameFind = function(query){
+    const q = Anubis.normalizeFindSurname(query);
+    if (!q) return;
+
+    Anubis.clearFindBlink();
+    document.body.classList.add("find-mode");
+
+    let firstFound = null;
+
+    document.querySelectorAll(".body-chip, .unknown-chip").forEach(card => {
+        const s = Anubis.cardSurnameForFind(card);
+
+        const similar =
+            s === q ||
+            s.startsWith(q) ||
+            q.startsWith(s) ||
+            Anubis.similarityRatio(q, s) >= 0.62;
+
+        if (similar) {
+            card.classList.add("find-blink");
+            if (!firstFound) firstFound = card;
+        }
+    });
+
+    if (firstFound) {
+        const scroller = firstFound.closest(".unknown-bodies, .shelf-bodies-scroll");
+        if (scroller) {
+            firstFound.scrollIntoView({
+                behavior:"smooth",
+                block:"nearest",
+                inline:"center"
+            });
+        }
+    }
+
+    Anubis.findBlinkTimer = setTimeout(Anubis.clearFindBlink, 7000);
+};
+
+Anubis.openFindPopup = function(){
+    Anubis.findPopupOpen = true;
+    if (document.querySelector(".anubis-find-popup")) return;
+
+    const popup = document.createElement("div");
+    popup.className = "anubis-find-popup";
+    popup.innerHTML = `
+        <input type="text" placeholder="Фамилия..." autocomplete="off">
+        <div class="hint">Enter — найти, Esc — закрыть</div>
+    `;
+
+    document.body.appendChild(popup);
+
+    const input = popup.querySelector("input");
+    input.focus();
+
+    input.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            popup.remove();
+            Anubis.findPopupOpen = false;
+            return;
+        }
+
+        if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const value = input.value;
+            popup.remove();
+            Anubis.findPopupOpen = false;
+            setTimeout(() => Anubis.runSurnameFind(value), 0);
+        }
+    });
+};
+
+document.addEventListener("keydown", function(e){
+    const tag = (document.activeElement && document.activeElement.tagName || "").toLowerCase();
+    const typing = ["input", "textarea", "select"].includes(tag);
+
+    if (typing) return;
+    if (e.key === "f" || e.key === "F" || e.key === "а" || e.key === "А") {
+        e.preventDefault();
+        Anubis.openFindPopup();
+    }
+});
+
+
+
+document.addEventListener("scroll", function(){
+    if (document.querySelector(".find-blink")) Anubis.clearFindBlink();
+}, true);
+
+
+// pointerover shelf-scroll-edge: надежнее, чем mouseenter, для узких зон полок.
+document.addEventListener("pointerover", function(e){
+    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge, .floor-scroll-edge");
+    if (edge) Anubis.startSmoothEdgeScroll(edge);
+}, true);
+
+document.addEventListener("pointerout", function(e){
+    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge, .floor-scroll-edge");
+    if (!edge) return;
+
+    const to = e.relatedTarget;
+    if (to && edge.contains(to)) return;
+
+    Anubis.stopSmoothEdgeScroll(edge);
+}, true);
+
+
+
+
+// === FINAL FINAL: reliable shelf horizontal scroll ===
+
+// Полочный скролл больше НЕ зависит от узких edge-зон.
+// Он работает по положению мыши внутри полки:
+// левая часть — скролл влево, правая часть — вправо.
+Anubis.shelfHoverScrollFinal = {
+    raf: null,
+    shelf: null,
+    dir: 0,
+    velocity: 0,
+    last: 0
+};
+
+Anubis.stopShelfHoverScrollFinal = function(){
+    const st = Anubis.shelfHoverScrollFinal;
+
+    if (st.raf) {
+        cancelAnimationFrame(st.raf);
+    }
+
+    st.raf = null;
+    st.shelf = null;
+    st.dir = 0;
+    st.velocity = 0;
+};
+
+Anubis.startShelfHoverScrollFinal = function(shelf, dir){
+    if (!shelf || !dir) return;
+
+    const scroller = shelf.querySelector(".shelf-bodies-scroll");
+    if (!scroller) return;
+
+    // Если реально нечего скроллить — не запускаем.
+    if (scroller.scrollWidth <= scroller.clientWidth + 2) {
+        Anubis.stopShelfHoverScrollFinal();
+        return;
+    }
+
+    const st = Anubis.shelfHoverScrollFinal;
+
+    if (st.shelf === shelf && st.dir === dir && st.raf) return;
+
+    Anubis.stopShelfHoverScrollFinal();
+
+    st.shelf = shelf;
+    st.dir = dir;
+    st.velocity = 0;
+    st.last = performance.now();
+
+    const step = (now) => {
+        const currentScroller = st.shelf && st.shelf.querySelector(".shelf-bodies-scroll");
+
+        if (!currentScroller) {
+            Anubis.stopShelfHoverScrollFinal();
+            return;
+        }
+
+        const dt = Math.min(32, now - st.last);
+        st.last = now;
+
+        // Быстрый, но плавный разгон.
+        st.velocity += (0.16 - st.velocity) * 0.10;
+
+        currentScroller.scrollLeft += st.dir * dt * st.velocity;
+
+        st.raf = requestAnimationFrame(step);
+    };
+
+    st.raf = requestAnimationFrame(step);
+};
+
+document.addEventListener("pointermove", function(e){
+    const shelf = e.target.closest && e.target.closest(".shelf");
+
+    if (!shelf || !shelf.classList.contains("has-side-scroll")) {
+        Anubis.stopShelfHoverScrollFinal();
+        return;
+    }
+
+    const scroller = shelf.querySelector(".shelf-bodies-scroll");
+    if (!scroller || scroller.scrollWidth <= scroller.clientWidth + 2) {
+        Anubis.stopShelfHoverScrollFinal();
+        return;
+    }
+
+    const rect = shelf.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    // Широкие зоны, чтобы не надо было попадать пиксель-в-пиксель.
+    const zone = Math.max(110, rect.width * 0.28);
+
+    if (x < zone) {
+        Anubis.startShelfHoverScrollFinal(shelf, -1);
+    } else if (x > rect.width - zone) {
+        Anubis.startShelfHoverScrollFinal(shelf, 1);
+    } else {
+        Anubis.stopShelfHoverScrollFinal();
+    }
+}, {passive:true});
+
+document.addEventListener("pointerleave", function(){
+    Anubis.stopShelfHoverScrollFinal();
+}, {passive:true});
+
+document.addEventListener("visibilitychange", function(){
+    if (document.hidden) Anubis.stopShelfHoverScrollFinal();
+});
+
+
+// Более заметный поиск: белое мигание и не гасить мгновенно.
+Anubis.clearFindBlink = function(){
+    document.querySelectorAll(".find-blink").forEach(el => el.classList.remove("find-blink"));
+    document.body.classList.remove("find-mode");
+
+    if (Anubis.findBlinkTimer) {
+        clearTimeout(Anubis.findBlinkTimer);
+        Anubis.findBlinkTimer = null;
+    }
+};
+
+Anubis.runSurnameFind = function(query){
+    const q = Anubis.normalizeFindSurname(query);
+    if (!q) return;
+
+    Anubis.clearFindBlink();
+    document.body.classList.add("find-mode");
+    Anubis.findActivatedAt = Date.now();
+
+    let firstFound = null;
+
+    document.querySelectorAll(".body-chip, .unknown-chip").forEach(card => {
+        const s = Anubis.cardSurnameForFind(card);
+
+        const similar =
+            s === q ||
+            s.startsWith(q) ||
+            q.startsWith(s) ||
+            Anubis.similarityRatio(q, s) >= 0.62;
+
+        if (similar) {
+            card.classList.add("find-blink");
+            if (!firstFound) firstFound = card;
+        }
+    });
+
+    if (firstFound) {
+        firstFound.scrollIntoView({
+            behavior:"smooth",
+            block:"nearest",
+            inline:"center"
+        });
+    }
+
+    Anubis.findBlinkTimer = setTimeout(Anubis.clearFindBlink, 7000);
+};
+
+
+// === FINAL SEARCH FIX: highlight after scroll, visible white blink ===
+Anubis.runSurnameFind = function(query){
+    const q = Anubis.normalizeFindSurname(query);
+    if (!q) return;
+
+    Anubis.clearFindBlink();
+    document.body.classList.add("find-mode");
+    Anubis.findActivatedAt = Date.now();
+
+    const found = [];
+
+    document.querySelectorAll(".body-chip, .unknown-chip").forEach(card => {
+        const s = Anubis.cardSurnameForFind(card);
+
+        const similar =
+            s === q ||
+            s.startsWith(q) ||
+            q.startsWith(s) ||
+            Anubis.similarityRatio(q, s) >= 0.62;
+
+        if (similar) {
+            found.push(card);
+        }
+    });
+
+    if (!found.length) return;
+
+    const firstFound = found[0];
+
+    // Сначала вытаскиваем скрытую карточку из горизонтального скролла.
+    firstFound.scrollIntoView({
+        behavior:"smooth",
+        block:"nearest",
+        inline:"center"
+    });
+
+    // Потом, после прокрутки, навешиваем мигание.
+    // Иначе браузер иногда сбрасывает/не показывает box-shadow во время scrollIntoView.
+    setTimeout(() => {
+        found.forEach(card => {
+            card.classList.add("find-blink");
+        });
+    }, 280);
+
+    Anubis.findBlinkTimer = setTimeout(Anubis.clearFindBlink, 7000);
+};

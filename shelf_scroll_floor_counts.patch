@@ -1,0 +1,161 @@
+diff --git a/app/templates/index.html b/app/templates/index.html
+--- a/app/templates/index.html
++++ b/app/templates/index.html
+@@
+-<div class="fridge-title">Холодильник {{ fridge.fridge }}</div>
++<div class="fridge-title">Холодильник {{ fridge.fridge }} ({{ fridge.shelves|map(attribute='bodies')|map('length')|sum }})</div>
+@@
+-<div class="shelf-header">Полка {{ shelf.shelf }}</div>
++<div class="shelf-header">Полка {{ shelf.shelf }} ({{ shelf.bodies|length }})</div>
+@@
+-<div class="bodies">
++<div class="bodies shelf-bodies-scroll">
+@@
+ </div>
++<div class="shelf-scroll-edge shelf-scroll-left" data-dir="-1"></div>
++<div class="shelf-scroll-edge shelf-scroll-right" data-dir="1"></div>
+ 
+ {% else %}
+@@
+-<div class="unknown-title">Без места / на полу</div>
++<div class="unknown-title">Без места / на полу ({{ unknown_bodies|length }})</div>
+diff --git a/app/static/css/layout.css b/app/static/css/layout.css
+--- a/app/static/css/layout.css
++++ b/app/static/css/layout.css
+@@
++/* === Полки: максимум 2 тела видно, остальные листаются вбок === */
++.shelf{
++    position:relative;
++}
++
++.shelf-bodies-scroll{
++    display:grid;
++    grid-auto-flow:column;
++    grid-auto-columns:calc((100% - 6px) / 2);
++    grid-template-columns:none !important;
++    grid-template-rows:1fr;
++    gap:6px;
++    overflow-x:auto;
++    overflow-y:hidden;
++    scroll-behavior:smooth;
++    scrollbar-width:none;
++}
++
++.shelf-bodies-scroll::-webkit-scrollbar{
++    display:none;
++}
++
++.shelf-bodies-scroll .body-chip{
++    height:100%;
++    min-width:0;
++    box-sizing:border-box;
++}
++
++.shelf-scroll-edge{
++    position:absolute;
++    top:28px;
++    bottom:6px;
++    width:34px;
++    z-index:10;
++    opacity:0;
++    pointer-events:auto;
++    transition:opacity .12s ease;
++}
++
++.shelf:hover .shelf-scroll-edge{
++    opacity:1;
++}
++
++.shelf-scroll-left{
++    left:0;
++    background:linear-gradient(90deg, rgba(255,212,90,.18), transparent);
++}
++
++.shelf-scroll-right{
++    right:0;
++    background:linear-gradient(270deg, rgba(255,212,90,.18), transparent);
++}
++
++/* Увеличенный пол */
++.layout{
++    grid-template-rows:1fr 154px;
++}
++
++.unknown-zone{
++    height:auto;
++    min-height:154px;
++}
++
++.unknown-bodies{
++    height:auto;
++    min-height:96px;
++    display:grid;
++    grid-template-columns:repeat(6,minmax(0,1fr));
++    grid-auto-rows:60px;
++    gap:8px;
++    overflow:hidden;
++}
++
++.unknown-chip{
++    height:60px;
++    min-height:0;
++}
++
++@media(max-width:1200px){
++    .unknown-bodies{
++        grid-template-columns:repeat(4,minmax(0,1fr));
++    }
++}
++
++@media(max-width:760px){
++    .shelf-bodies-scroll{
++        grid-auto-columns:70%;
++    }
++
++    .unknown-bodies{
++        grid-template-columns:repeat(2,minmax(0,1fr));
++    }
++}
+diff --git a/app/static/js/navigation.js b/app/static/js/navigation.js
+--- a/app/static/js/navigation.js
++++ b/app/static/js/navigation.js
+@@
++// Горизонтальная прокрутка тел внутри полки при наведении на край.
++Anubis.shelfEdgeScrollTimers = Anubis.shelfEdgeScrollTimers || new WeakMap();
++
++Anubis.startShelfEdgeScroll = function(edge){
++    const shelf = edge && edge.closest(".shelf");
++    if (!shelf) return;
++
++    const scroller = shelf.querySelector(".shelf-bodies-scroll");
++    if (!scroller) return;
++
++    const dir = Number(edge.dataset.dir || 0);
++    if (!dir) return;
++
++    Anubis.stopShelfEdgeScroll(edge);
++
++    const timer = setInterval(() => {
++        scroller.scrollLeft += dir * 18;
++    }, 24);
++
++    Anubis.shelfEdgeScrollTimers.set(edge, timer);
++};
++
++Anubis.stopShelfEdgeScroll = function(edge){
++    const timer = Anubis.shelfEdgeScrollTimers.get(edge);
++    if (timer) {
++        clearInterval(timer);
++        Anubis.shelfEdgeScrollTimers.delete(edge);
++    }
++};
++
++document.addEventListener("mouseenter", function(e){
++    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge");
++    if (edge) Anubis.startShelfEdgeScroll(edge);
++}, true);
++
++document.addEventListener("mouseleave", function(e){
++    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge");
++    if (edge) Anubis.stopShelfEdgeScroll(edge);
++}, true);

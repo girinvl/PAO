@@ -650,3 +650,26 @@ align-items:flex-start;
         padding-bottom:22px;
     }
 }
+
+/* === MOBILE: пол (unknown) в столбик === */
+@media (max-width: 760px){
+
+    .unknown-bodies{
+        display:flex !important;
+        flex-direction:column !important;
+        gap:8px !important;
+
+        overflow-x:hidden !important;
+        overflow-y:auto !important;
+
+        height:auto !important;
+        max-height:none !important;
+    }
+
+    .unknown-chip{
+        width:100% !important;
+        height:auto !important;
+        min-height:56px !important;
+    }
+
+}

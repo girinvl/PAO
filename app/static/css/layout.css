@@ -606,3 +606,266 @@ animation:anubisFlagBlink 1s infinite;
     right:0;
     background:linear-gradient(270deg, rgba(255,212,90,.20), transparent);
 }
+
+
+/* === FIX: не обрезать карточки в полках === */
+
+.shelf-bodies-scroll{
+    height:100% !important;
+    min-height:0 !important;
+    align-items:stretch !important;
+}
+
+.shelf-bodies-scroll .body-chip{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    padding:7px 9px !important;
+    justify-content:center !important;
+}
+
+/* Полки листаются только если реально есть скрытые тела */
+.shelf:not(.has-side-scroll) .shelf-scroll-edge{
+    display:none !important;
+}
+
+/* Поиск по F — окно */
+.anubis-find-popup{
+    position:fixed;
+    left:50%;
+    top:90px;
+    transform:translateX(-50%);
+    z-index:30000;
+    width:min(420px, calc(100vw - 32px));
+    padding:14px;
+    border:1px solid rgba(125,211,252,.75);
+    border-radius:16px;
+    background:rgba(16,22,24,.96);
+    box-shadow:0 18px 55px rgba(0,0,0,.55), 0 0 24px rgba(125,211,252,.25);
+}
+
+.anubis-find-popup input{
+    width:100%;
+    box-sizing:border-box;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,212,90,.45);
+    background:#1d2327;
+    color:#ffe8a6;
+    font-size:18px;
+    font-weight:900;
+    outline:none;
+}
+
+.anubis-find-popup .hint{
+    margin-top:8px;
+    color:#b9aa78;
+    font-size:12px;
+}
+
+/* медленное синее мигание найденных */
+.body-chip.find-blink{
+    animation:anubisFindBlink 1.15s ease-in-out infinite;
+}
+
+@keyframes anubisFindBlink{
+    0%,100%{
+        box-shadow:inset 0 0 0 3px rgba(125,211,252,.95), 0 0 10px rgba(125,211,252,.35);
+    }
+    50%{
+        box-shadow:inset 0 0 0 3px rgba(125,211,252,.25), 0 0 22px rgba(125,211,252,.85);
+    }
+}
+
+
+/* === FIX: полочный edge-scroll как на полу + розовый поиск === */
+
+/* делаем зоны полочного скролла шире и всегда ловящими мышь */
+.shelf.has-side-scroll .shelf-scroll-edge{
+    display:block !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+}
+
+.shelf-scroll-edge{
+    top:24px !important;
+    bottom:4px !important;
+    width:58px !important;
+    z-index:40 !important;
+}
+
+.shelf-scroll-left{
+    left:0 !important;
+}
+
+.shelf-scroll-right{
+    right:0 !important;
+}
+
+/* чтобы карточки не перекрывали зоны наведения */
+.shelf.has-side-scroll .shelf-bodies-scroll{
+    padding-left:2px !important;
+    padding-right:2px !important;
+}
+
+/* розовая рамка поиска */
+.body-chip.find-blink{
+    animation:anubisFindBlinkPink 1.15s ease-in-out infinite !important;
+}
+
+@keyframes anubisFindBlinkPink{
+    0%,100%{
+        box-shadow:inset 0 0 0 3px rgba(255,105,180,.96), 0 0 10px rgba(255,105,180,.38);
+    }
+    50%{
+        box-shadow:inset 0 0 0 3px rgba(255,105,180,.32), 0 0 24px rgba(255,105,180,.9);
+    }
+}
+
+/* при поиске скрываем основную синюю рамку выбора */
+body.find-mode .selected-nav{
+    outline:none !important;
+    box-shadow:none !important;
+}
+
+
+/* === FIX: green search blink + reliable shelf hover scroll === */
+
+/* зоны больше не должны мешать наведению */
+.shelf-scroll-edge{
+    pointer-events:none !important;
+    opacity:0 !important;
+}
+
+/* ядовито-зелёная рамка поиска */
+.body-chip.find-blink,
+.unknown-chip.find-blink{
+    border-color:#39ff14 !important;
+    animation:anubisFindBlinkToxicGreen 1.05s ease-in-out infinite !important;
+}
+
+@keyframes anubisFindBlinkToxicGreen{
+    0%,100%{
+        box-shadow:
+            inset 0 0 0 3px rgba(57,255,20,1),
+            0 0 10px rgba(57,255,20,.55),
+            0 0 22px rgba(57,255,20,.35) !important;
+        filter:brightness(1.08);
+    }
+    50%{
+        box-shadow:
+            inset 0 0 0 3px rgba(57,255,20,.35),
+            0 0 20px rgba(57,255,20,1),
+            0 0 34px rgba(57,255,20,.75) !important;
+        filter:brightness(1.22);
+    }
+}
+
+body.find-mode .selected-nav{
+    outline:none !important;
+    box-shadow:none !important;
+}
+
+
+/* === FINAL FIX: shelf horizontal scroll + bright white search blink === */
+
+/* Полка должна иметь реальный горизонтальный overflow */
+.shelf-bodies-scroll{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    gap:6px !important;
+
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+
+    scroll-behavior:auto !important;
+    scrollbar-width:none !important;
+}
+
+.shelf-bodies-scroll::-webkit-scrollbar{
+    display:none !important;
+}
+
+/* В полке видно ровно 2 карточки, остальные уходят вправо */
+.shelf-bodies-scroll .body-chip{
+    flex:0 0 calc((100% - 6px) / 2) !important;
+    width:calc((100% - 6px) / 2) !important;
+    max-width:calc((100% - 6px) / 2) !important;
+
+    height:100% !important;
+    min-height:0 !important;
+    box-sizing:border-box !important;
+}
+
+/* Старые edge-зоны отключаем, они мешали наведению */
+.shelf-scroll-edge{
+    display:none !important;
+    pointer-events:none !important;
+}
+
+/* Ярко-белое мерцание поиска */
+.body-chip.find-blink,
+.unknown-chip.find-blink{
+    border-color:#ffffff !important;
+    animation:anubisFindBlinkWhite 0.9s ease-in-out infinite !important;
+    position:relative !important;
+    z-index:50 !important;
+}
+
+@keyframes anubisFindBlinkWhite{
+    0%,100%{
+        box-shadow:
+            inset 0 0 0 4px rgba(255,255,255,1),
+            0 0 14px rgba(255,255,255,.95),
+            0 0 32px rgba(255,255,255,.85),
+            0 0 52px rgba(255,255,255,.55) !important;
+        filter:brightness(1.35) contrast(1.12);
+    }
+    50%{
+        box-shadow:
+            inset 0 0 0 4px rgba(255,255,255,.25),
+            0 0 8px rgba(255,255,255,.45),
+            0 0 22px rgba(255,255,255,.35) !important;
+        filter:brightness(1.05);
+    }
+}
+
+body.find-mode .selected-nav{
+    outline:none !important;
+    box-shadow:none !important;
+}
+
+
+/* === FIX: slow shelf scroll + visible search highlight === */
+
+/* очень заметная белая рамка поиска */
+.body-chip.find-blink,
+.unknown-chip.find-blink{
+    outline:none !important;
+    border-color:#ffffff !important;
+    animation:anubisFindBlinkWhiteStrong 0.85s ease-in-out infinite !important;
+    position:relative !important;
+    z-index:999 !important;
+}
+
+@keyframes anubisFindBlinkWhiteStrong{
+    0%,100%{
+        box-shadow:
+            inset 0 0 0 4px #ffffff,
+            0 0 0 2px rgba(255,255,255,.95),
+            0 0 18px rgba(255,255,255,.95),
+            0 0 38px rgba(255,255,255,.75) !important;
+        filter:brightness(1.45) contrast(1.15);
+    }
+    50%{
+        box-shadow:
+            inset 0 0 0 4px rgba(255,255,255,.22),
+            0 0 0 2px rgba(255,255,255,.35),
+            0 0 10px rgba(255,255,255,.55) !important;
+        filter:brightness(1.05);
+    }
+}

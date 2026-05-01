@@ -214,6 +214,9 @@ Anubis.saveBody = async function(e){
         return;
     }
 
+    if (Anubis.activeBodyLock && Anubis.releaseBodyLock) {
+        await Anubis.releaseBodyLock(Anubis.activeBodyLock.bodyId);
+    }
     Anubis.activeBodyLock = null;
     if (Anubis.activeBodyLockTimer) {
         clearInterval(Anubis.activeBodyLockTimer);
