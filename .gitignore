@@ -16,14 +16,12 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
-*.bin
 
 # Logs
 *.log
 
 # Uploads / temp
 uploads/
-wheels/
 tmp/
 temp/
 
@@ -43,5 +41,19 @@ certs/
 *.pem
 *.crt
 
-# local env / build cache
-.venv_wheelhouse/
+*.rej
+*.orig
+*.backup
+*.bak
+*.before_*
+__pycache__/
+*.pyc
+*.log
+.env
+.env.*
+.venv/
+venv/
+certs/
+*.key
+*.pem
+*.crt

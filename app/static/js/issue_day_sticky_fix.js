@@ -1,1 +1,0 @@
-/* sticky day fix patch */
