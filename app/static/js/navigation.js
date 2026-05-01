@@ -516,3 +516,105 @@ document.addEventListener("mouseleave", function(e){
     const edge = e.target.closest && e.target.closest(".shelf-scroll-edge");
     if (edge) Anubis.stopShelfEdgeScroll(edge);
 }, true);
+
+
+// === Smooth horizontal scroll for shelves and floor ===
+Anubis.edgeScrollTimers = Anubis.edgeScrollTimers || new WeakMap();
+
+Anubis.ensureShelfAndFloorScrollState = function(){
+    document.querySelectorAll(".shelf").forEach(shelf => {
+        const scroller = shelf.querySelector(".shelf-bodies-scroll");
+        if (!scroller) return;
+
+        const count = scroller.querySelectorAll(".body-chip").length;
+        shelf.classList.toggle("has-side-scroll", count > 2);
+
+        if (count > 2 && !shelf.querySelector(".shelf-scroll-left")) {
+            const left = document.createElement("div");
+            left.className = "shelf-scroll-edge shelf-scroll-left";
+            left.dataset.dir = "-1";
+
+            const right = document.createElement("div");
+            right.className = "shelf-scroll-edge shelf-scroll-right";
+            right.dataset.dir = "1";
+
+            shelf.appendChild(left);
+            shelf.appendChild(right);
+        }
+    });
+
+    const floor = document.querySelector(".unknown-zone");
+    const floorBodies = floor && floor.querySelector(".unknown-bodies");
+    if (floor && floorBodies) {
+        const count = floorBodies.querySelectorAll(".body-chip, .unknown-chip").length;
+        floor.classList.toggle("has-floor-scroll", count > 18);
+
+        if (count > 18 && !floor.querySelector(".floor-scroll-left")) {
+            const left = document.createElement("div");
+            left.className = "floor-scroll-edge floor-scroll-left";
+            left.dataset.dir = "-1";
+
+            const right = document.createElement("div");
+            right.className = "floor-scroll-edge floor-scroll-right";
+            right.dataset.dir = "1";
+
+            floor.appendChild(left);
+            floor.appendChild(right);
+        }
+    }
+};
+
+Anubis.startSmoothEdgeScroll = function(edge){
+    if (!edge) return;
+
+    const dir = Number(edge.dataset.dir || 0);
+    if (!dir) return;
+
+    const shelf = edge.closest(".shelf");
+    const floor = edge.closest(".unknown-zone");
+
+    const scroller = shelf
+        ? shelf.querySelector(".shelf-bodies-scroll")
+        : floor && floor.querySelector(".unknown-bodies");
+
+    if (!scroller) return;
+
+    Anubis.stopSmoothEdgeScroll(edge);
+
+    let raf = null;
+    let last = performance.now();
+
+    const step = (now) => {
+        const dt = Math.min(32, now - last);
+        last = now;
+
+        scroller.scrollLeft += dir * dt * 0.42;
+
+        raf = requestAnimationFrame(step);
+        Anubis.edgeScrollTimers.set(edge, raf);
+    };
+
+    raf = requestAnimationFrame(step);
+    Anubis.edgeScrollTimers.set(edge, raf);
+};
+
+Anubis.stopSmoothEdgeScroll = function(edge){
+    const raf = Anubis.edgeScrollTimers.get(edge);
+    if (raf) {
+        cancelAnimationFrame(raf);
+        Anubis.edgeScrollTimers.delete(edge);
+    }
+};
+
+document.addEventListener("mouseenter", function(e){
+    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge, .floor-scroll-edge");
+    if (edge) Anubis.startSmoothEdgeScroll(edge);
+}, true);
+
+document.addEventListener("mouseleave", function(e){
+    const edge = e.target.closest && e.target.closest(".shelf-scroll-edge, .floor-scroll-edge");
+    if (edge) Anubis.stopSmoothEdgeScroll(edge);
+}, true);
+
+window.addEventListener("load", Anubis.ensureShelfAndFloorScrollState);
+setTimeout(Anubis.ensureShelfAndFloorScrollState, 300);

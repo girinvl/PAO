@@ -318,7 +318,7 @@ data-shelf="{{ shelf.shelf }}"
 onclick="Anubis.openShelfModal({{ fridge.fridge }},{{ shelf.shelf }})"
 >
 
-<div class="shelf-header">Полка {{ shelf.shelf }} ({{ shelf.bodies|length }})</div>
+<div class="shelf-header">Полка {{ shelf.shelf }} <span class="shelf-count {% if shelf.bodies|length > 2 %}shelf-count-over{% endif %}">({{ shelf.bodies|length }})</span></div>
 
 {% if shelf.bodies %}
 <div class="bodies shelf-bodies-scroll">
