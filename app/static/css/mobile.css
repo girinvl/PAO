@@ -673,3 +673,41 @@ align-items:flex-start;
     }
 
 }
+
+/* === MOBILE FIX: секция "Без места / на полу" резиновая === */
+@media (max-width: 760px){
+
+    .layout{
+        grid-template-rows:auto auto !important;
+        height:auto !important;
+        min-height:100vh !important;
+        overflow:visible !important;
+    }
+
+    .unknown-zone{
+        height:auto !important;
+        min-height:unset !important;
+        max-height:none !important;
+        overflow:visible !important;
+        padding-bottom:14px !important;
+    }
+
+    .unknown-bodies{
+        display:flex !important;
+        flex-direction:column !important;
+        gap:8px !important;
+
+        height:auto !important;
+        min-height:0 !important;
+        max-height:none !important;
+
+        overflow:visible !important;
+    }
+
+    .unknown-chip{
+        width:100% !important;
+        height:auto !important;
+        min-height:56px !important;
+    }
+
+}
